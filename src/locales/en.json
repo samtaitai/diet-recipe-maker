@@ -1,0 +1,14 @@
+{
+    "app_title": "Switch-On Diet Recipe Maker",
+    "week_label": "Select Week",
+    "ingredients_label": "Available Ingredients",
+    "ingredients_placeholder": "e.g., chicken breast, broccoli, almonds",
+    "generate_button": "Generate Recipe",
+    "generating": "Generating...",
+    "login_google": "Sign in with Google",
+    "logout": "Sign out",
+    "print_pdf": "Save as PDF",
+    "share": "Share on X",
+    "recipe_result": "Your Recipe",
+    "error_msg": "Something went wrong. Please try again."
+}

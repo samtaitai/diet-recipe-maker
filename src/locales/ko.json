@@ -1,0 +1,14 @@
+{
+    "app_title": "스위치온 다이어트 레시피 메이커",
+    "week_label": "주차 선택",
+    "ingredients_label": "사용 가능한 재료",
+    "ingredients_placeholder": "예: 닭가슴살, 브로콜리, 아몬드",
+    "generate_button": "레시피 생성",
+    "generating": "생성 중...",
+    "login_google": "Google로 로그인",
+    "logout": "로그아웃",
+    "print_pdf": "PDF로 저장",
+    "share": "X에 공유",
+    "recipe_result": "추천 레시피",
+    "error_msg": "오류가 발생했습니다. 다시 시도해주세요."
+}
