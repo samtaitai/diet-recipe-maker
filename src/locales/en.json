@@ -10,5 +10,20 @@
     "print_pdf": "Save as PDF",
     "share": "Share on X",
     "recipe_result": "Your Recipe",
-    "error_msg": "Something went wrong. Please try again."
+    "error_msg": "Something went wrong. Please try again.",
+    "ingredient_search_label": "Search Ingredients",
+    "ingredient_search_placeholder": "Type to search ingredients...",
+    "add_new_ingredient": "Add new ingredient",
+    "ingredient_name": "Name",
+    "ingredient_name_ko": "Korean Name",
+    "ingredient_category": "Category",
+    "ingredient_added": "Ingredient added!",
+    "ingredient_exists": "This ingredient already exists.",
+    "no_results": "No ingredients found.",
+    "my_ingredients": "My Ingredients",
+    "quantity": "Quantity",
+    "add_to_list": "Add",
+    "remove_from_list": "Remove",
+    "ingredient_list_empty": "No ingredients in your list yet.",
+    "ingredient_already_in_list": "Already in your list"
 }

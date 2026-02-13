@@ -10,5 +10,20 @@
     "print_pdf": "PDF로 저장",
     "share": "X에 공유",
     "recipe_result": "추천 레시피",
-    "error_msg": "오류가 발생했습니다. 다시 시도해주세요."
+    "error_msg": "오류가 발생했습니다. 다시 시도해주세요.",
+    "ingredient_search_label": "재료 검색",
+    "ingredient_search_placeholder": "재료를 검색하세요...",
+    "add_new_ingredient": "새 재료 추가",
+    "ingredient_name": "이름",
+    "ingredient_name_ko": "한국어 이름",
+    "ingredient_category": "카테고리",
+    "ingredient_added": "재료가 추가되었습니다!",
+    "ingredient_exists": "이미 존재하는 재료입니다.",
+    "no_results": "검색 결과가 없습니다.",
+    "my_ingredients": "나의 재료",
+    "quantity": "수량",
+    "add_to_list": "내 목록에 추가",
+    "remove_from_list": "삭제",
+    "ingredient_list_empty": "아직 재료가 없습니다.",
+    "ingredient_already_in_list": "이미 목록에 있습니다."
 }

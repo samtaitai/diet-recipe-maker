@@ -5,11 +5,13 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
 import { auth } from "./services/firebase";
-import { generateRecipeAPI } from "./services/api";
+import { generateRecipeAPI, getIngredientListAPI, removeFromIngredientListAPI } from "./services/api";
 import DietForm from "./components/DietForm";
 import RecipeDisplay from "./components/RecipeDisplay";
 import AuthButton from "./components/AuthButton";
 import PrintView from "./components/PrintView";
+import IngredientSearch from "./components/IngredientSearch";
+import MyIngredientList from "./components/MyIngredientList";
 import './App.css';
 
 function App() {
@@ -18,11 +20,30 @@ function App() {
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [ingredientList, setIngredientList] = useState([]);
+  const [ingredientListLoading, setIngredientListLoading] = useState(false);
   const printRef = useRef();
+
+  const fetchIngredientList = async () => {
+    setIngredientListLoading(true);
+    try {
+      const data = await getIngredientListAPI();
+      setIngredientList(data);
+    } catch (err) {
+      console.error("Failed to fetch ingredient list:", err);
+    } finally {
+      setIngredientListLoading(false);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        fetchIngredientList();
+      } else {
+        setIngredientList([]);
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -45,6 +66,15 @@ function App() {
       setError(t('error_msg'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRemoveFromList = async (docId) => {
+    try {
+      await removeFromIngredientListAPI(docId);
+      setIngredientList((prev) => prev.filter((item) => item.id !== docId));
+    } catch (err) {
+      console.error("Failed to remove ingredient:", err);
     }
   };
 
@@ -72,7 +102,7 @@ function App() {
 
   return (
     <div className="container" style={{ padding: '2rem' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid #e7e5e4', paddingBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.5rem', margin: 0 }}>{t('app_title')}</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={toggleLanguage}>{i18n.language === 'en' ? 'KO' : 'EN'}</button>
@@ -81,6 +111,14 @@ function App() {
       </header>
 
       <main>
+        {user && <IngredientSearch onAdd={fetchIngredientList} />}
+        {user && (
+          <MyIngredientList
+            ingredients={ingredientList}
+            onRemove={handleRemoveFromList}
+            loading={ingredientListLoading}
+          />
+        )}
         <DietForm onSubmit={handleGenerate} isLoading={loading} />
 
         {error && <p style={{ color: 'red', textAlign: 'center', marginTop: '1rem' }}>{error}</p>}
