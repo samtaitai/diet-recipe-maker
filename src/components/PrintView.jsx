@@ -1,8 +1,8 @@
-import React, { forwardRef } from 'react';
+import React from 'react';
 import RecipeQRCode from './RecipeQRCode';
 import '../styles/print.css';
 
-const PrintView = forwardRef(({ recipe, activeLanguage }, ref) => {
+const PrintView = ({ recipe, activeLanguage }) => {
     if (!recipe) return null;
 
     return (
@@ -82,6 +82,6 @@ const PrintView = forwardRef(({ recipe, activeLanguage }, ref) => {
             </footer>
         </div>
     );
-});
+};
 
 export default PrintView;

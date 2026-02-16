@@ -73,5 +73,6 @@
     "category_fats": "건강한 지방",
     "category_boosters": "풍미 더하기",
     "copyright": "© {{year}} 이소연. 모든 권리 보유.",
-    "signin_to_save": "레시피를 저장하려면 로그인하세요"
+    "signin_to_save": "레시피를 저장하려면 로그인하세요",
+    "signin_to_share_x": "로그인하여 X에 공유하세요"
 }

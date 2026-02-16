@@ -123,7 +123,6 @@ As a user, I want a sticky header that remains at the top of the page. Before si
 
 ### Favourites (US-6)
 * **Styling:** Floating "Favourite" button on the recipe card.
-* **View:** A persistent sidebar or dedicated tab with small preview cards.
 
 ### PDF Export (US-8)
 * **Layout:** Mirror the "Wellness Journal" aesthetic with clean typography and high-contrast sections.
@@ -135,12 +134,21 @@ As a user, I want a sticky header that remains at the top of the page. Before si
 
 ### General Technical
 * **Internationalization (i18n):** Support for English (`en.json`) and Korean (`ko.json`).
-* **Social Sharing:** Twitter Web Intent integration.
+* **Social Sharing:** Twitter Web Intent integration, accessible only to authenticated users (with alert for guests).
 * **Auth:** Google SSO button using the `firebase/auth` SDK.
 
 ---
 
-## 7. Firestore Security Rules
+## 7. Security & Rules
+### App Check
+* **Implementation**: Firebase App Check with reCAPTCHA v3.
+* **Goal**: Protect backend resources (Cloud Functions) from abuse, such as unauthenticated requests to the Gemini API via "Chef, up to you".
+* **Enforcement**:
+    *   **Frontend**: Initialized in `services/firebase.js` using `VITE_RECAPTCHA_SITE_KEY`.
+    *   **API**: Token passed in `X-Firebase-App-Check` header for custom fetch calls.
+    *   **Backend**: Verified in `functions/main.py` using `firebase-admin` SDK.
+
+### Firestore Security Rules
 * `diet_rules`: Read-only for authenticated users.
 * `users/{uid}`: Read/write only by the owning user.
 * `users/{uid}/favorites`: Read/write only by the owning user.

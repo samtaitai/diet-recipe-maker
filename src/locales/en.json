@@ -73,5 +73,6 @@
     "category_fats": "Healthy Fats",
     "category_boosters": "Flavour Boosters",
     "copyright": "© {{year}} SoyonLee. All rights reserved.",
-    "signin_to_save": "Sign in to save this recipe"
+    "signin_to_save": "Sign in to save this recipe",
+    "signin_to_share_x": "Sign in to share it on X"
 }

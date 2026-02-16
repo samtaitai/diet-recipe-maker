@@ -23,4 +23,22 @@ export const googleProvider = new GoogleAuthProvider();
 if (location.hostname === "localhost") {
     // connectFirestoreEmulator(db, 'localhost', 8080);
     // connectFunctionsEmulator(functions, 'localhost', 5001);
+
+    // Use the debug token from environment if available, otherwise 'true' generates a new one
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = import.meta.env.VITE_APP_CHECK_DEBUG_TOKEN || true;
+}
+
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+
+export let appCheck = null;
+
+// Initialize App Check
+// Ensure VITE_RECAPTCHA_SITE_KEY is set in your .env file
+if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
+    appCheck = initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
+        isTokenAutoRefreshEnabled: true
+    });
+} else {
+    console.warn("VITE_RECAPTCHA_SITE_KEY is not set. App Check is disabled.");
 }

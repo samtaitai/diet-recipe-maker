@@ -1,4 +1,5 @@
-import { auth, db } from "./firebase";
+import { auth, db, appCheck } from "./firebase";
+import { getToken } from "firebase/app-check";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const getAuthToken = async (optional = false) => {
@@ -18,6 +19,18 @@ export const generateRecipeAPI = async (week, ingredients) => {
   };
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  // Add App Check token if available
+  if (appCheck) {
+    try {
+      const appCheckTokenResult = await getToken(appCheck, /* forceRefresh= */ false);
+      if (appCheckTokenResult && appCheckTokenResult.token) {
+        headers["X-Firebase-App-Check"] = appCheckTokenResult.token;
+      }
+    } catch (e) {
+      console.error("Failed to get App Check token:", e);
+    }
   }
 
   const response = await fetch("/api/generateRecipe", {

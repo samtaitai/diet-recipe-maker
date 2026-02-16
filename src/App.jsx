@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from "react-i18next";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./services/firebase";
@@ -35,7 +35,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [ingredientList, setIngredientList] = useState([]);
-  const [ingredientListLoading, setIngredientListLoading] = useState(false);
+
 
   // Modal & Selection State
   const [showInspirationModal, setShowInspirationModal] = useState(false);
@@ -43,18 +43,15 @@ function App() {
   const [validationResults, setValidationResults] = useState({ prohibited: [], unknown: [] });
   const [pendingWeek, setPendingWeek] = useState(null);
 
-  const printRef = useRef();
+
 
   const fetchIngredientList = async (uid) => {
     if (!uid) return;
-    setIngredientListLoading(true);
     try {
       const list = await getUserIngredients(uid);
       setIngredientList(list);
     } catch (err) {
       console.error("Failed to fetch ingredient list:", err);
-    } finally {
-      setIngredientListLoading(false);
     }
   };
 
@@ -277,7 +274,7 @@ function App() {
 
         {/* Hidden Print View for PDF Generation */}
         <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
-          <PrintView ref={printRef} recipe={recipe} activeLanguage={i18n.language} />
+          <PrintView recipe={recipe} activeLanguage={i18n.language} />
         </div>
 
         <footer className="app-footer">

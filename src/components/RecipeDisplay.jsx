@@ -14,7 +14,14 @@ const RecipeDisplay = ({ recipe, onDownloadPdf, onSaveFavorite, isFavorited, isS
     onSaveFavorite();
   };
 
-  const shareText = encodeURIComponent(`Check out this recipe: ${recipe.title} #SwitchOnDiet`);
+  const handleShareClick = (e) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      alert(t('signin_to_share_x'));
+    }
+  };
+
+  const shareText = encodeURIComponent(`Need a recipe idea? Try this: ${recipe.title} #SwitchOnDiet https://switchon-recipe-maker.web.app`);
   const shareUrl = "https://twitter.com/intent/tweet?text=" + shareText;
 
   return (
@@ -100,7 +107,22 @@ const RecipeDisplay = ({ recipe, onDownloadPdf, onSaveFavorite, isFavorited, isS
 
       <div className="actions" style={{ display: 'flex', gap: '10px', marginTop: '2rem', justifyContent: 'center' }}>
         <button onClick={onDownloadPdf}>{t('print_pdf')}</button>
-        <a href={shareUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '0.6em 1.2em', backgroundColor: '#10b981', color: 'white', textDecoration: 'none', borderRadius: '9999px', fontWeight: 500, fontSize: '0.9em' }}>
+        <a
+          href={shareUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleShareClick}
+          style={{
+            padding: '0.6em 1.2em',
+            backgroundColor: isLoggedIn ? '#10b981' : '#d6d3d1',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '9999px',
+            fontWeight: 500,
+            fontSize: '0.9em',
+            cursor: isLoggedIn ? 'pointer' : 'not-allowed'
+          }}
+        >
           {t('share')}
         </a>
       </div>

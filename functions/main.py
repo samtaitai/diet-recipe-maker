@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 import google.generativeai as genai
-from firebase_admin import initialize_app, firestore, auth
+from firebase_admin import initialize_app, firestore, auth, app_check
 from firebase_functions import https_fn, options
 from google.cloud import firestore as google_firestore
 
@@ -72,6 +72,18 @@ def generate_recipe(req: https_fn.Request) -> https_fn.Response:
 
     if req.method != "POST":
         return https_fn.Response("Method not allowed", status=405)
+
+    # 1. App Check Verification
+    app_check_token = req.headers.get("X-Firebase-App-Check")
+    if not app_check_token:
+         # Optional: Allow skipping in emulator if needed, but safer to enforce
+         # if "FUNCTIONS_EMULATOR" not in os.environ:
+         return https_fn.Response("Unauthorized: Missing App Check token", status=401)
+    
+    try:
+        app_check.verify_token(app_check_token)
+    except Exception as e:
+        return https_fn.Response(f"Unauthorized: Invalid App Check token. {str(e)}", status=401)
 
     # 2. Authentication (Optional for recipe generation)
     try:
