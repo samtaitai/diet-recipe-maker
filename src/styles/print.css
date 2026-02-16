@@ -22,11 +22,16 @@
 
     /* Formatting layout for A4 */
     .print-view-container {
-        width: 210mm;
+        width: 180mm;
+        min-height: 297mm;
+        padding: 40px;
+        background: #fff;
         margin: 0 auto;
-        padding: 20mm;
-        box-shadow: none;
-        border: none;
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+        color: #1a1a1a;
+        display: flex;
+        flex-direction: column;
     }
 
     /* Typography Refinement */

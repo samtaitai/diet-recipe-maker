@@ -100,10 +100,10 @@ function App() {
     try {
       const ingredientsString = ingredientList.join(", ");
       const result = await generateRecipeAPI(week, ingredientsString);
-      setRecipe(result);
+      setRecipe(Array.isArray(result) ? result[0] : result);
     } catch (err) {
       console.error(err);
-      setError(t('error_msg'));
+      setError(err.message || t('error_msg'));
     } finally {
       setLoading(false);
     }

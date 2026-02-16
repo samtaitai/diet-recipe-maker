@@ -43,12 +43,12 @@ const PrintView = forwardRef(({ recipe, activeLanguage }, ref) => {
                 </div>
             </section>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '30pt' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20pt' }}>
                 <section className="ingredients-section">
-                    <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '5pt', marginBottom: '10pt' }}>Ingredients</h3>
+                    <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '5pt', marginBottom: '10pt', fontSize: '16pt' }}>Ingredients</h3>
                     <ul style={{ listStyle: 'none', padding: 0 }}>
                         {recipe.ingredients?.map((item, idx) => (
-                            <li key={idx} style={{ padding: '4pt 0', borderBottom: '1px solid #fafafa', fontSize: '11pt' }}>
+                            <li key={idx} style={{ padding: '6pt 0', borderBottom: '1px solid #f5f5f4', fontSize: '12pt' }}>
                                 {item}
                             </li>
                         ))}
@@ -56,10 +56,10 @@ const PrintView = forwardRef(({ recipe, activeLanguage }, ref) => {
                 </section>
 
                 <section className="instructions-section">
-                    <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '5pt', marginBottom: '10pt' }}>Instructions</h3>
-                    <ol style={{ paddingLeft: '15pt' }}>
+                    <h3 style={{ borderBottom: '1px solid #eee', paddingBottom: '5pt', marginBottom: '10pt', fontSize: '16pt' }}>Instructions</h3>
+                    <ol style={{ paddingLeft: '18pt' }}>
                         {recipe.instructions?.map((step, idx) => (
-                            <li key={idx} className="instruction-step" style={{ marginBottom: '12pt', paddingLeft: '5pt', fontSize: '11pt' }}>
+                            <li key={idx} className="instruction-step" style={{ marginBottom: '14pt', paddingLeft: '5pt', fontSize: '12pt', lineHeight: '1.6' }}>
                                 {step}
                             </li>
                         ))}

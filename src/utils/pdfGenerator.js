@@ -22,7 +22,7 @@ export const generateRecipePDF = async (elementId, fileName = 'recipe.pdf') => {
             useCORS: true,
             logging: false,
             backgroundColor: '#ffffff',
-            windowWidth: 794, // 210mm at 96 DPI
+            windowWidth: 680, // ~180mm at 96 DPI
         });
 
         const imgData = canvas.toDataURL('image/png');
@@ -36,24 +36,40 @@ export const generateRecipePDF = async (elementId, fileName = 'recipe.pdf') => {
         });
 
         const imgProps = pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-        // 3. Handle multi-page if height exceeds A4
+        const margin = 15; // 15mm margin
+        const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
-        let heightLeft = pdfHeight;
-        let position = 0;
+
+        const contentWidth = pageWidth - (margin * 2);
+        const contentHeightPerPage = pageHeight - (margin * 2);
+
+        // Calculate total PDF height based on image aspect ratio
+        const totalPdfHeight = (imgProps.height * contentWidth) / imgProps.width;
+
+        let heightLeft = totalPdfHeight;
+        let position = margin; // Start position for the first page
+
+        // Helper to draw masks and border (optional for style)
+        const drawPageMasks = () => {
+            pdf.setFillColor(255, 255, 255);
+            // Top Mask
+            pdf.rect(0, 0, pageWidth, margin, 'F');
+            // Bottom Mask
+            pdf.rect(0, pageHeight - margin, pageWidth, margin, 'F');
+        };
 
         // First page
-        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
+        pdf.addImage(imgData, 'PNG', margin, position, contentWidth, totalPdfHeight);
+        drawPageMasks();
+        heightLeft -= contentHeightPerPage;
 
         // Additional pages if needed
-        while (heightLeft >= 0) {
-            position = heightLeft - pdfHeight;
+        while (heightLeft > 0) {
+            position = margin - (totalPdfHeight - heightLeft);
             pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
-            heightLeft -= pageHeight;
+            pdf.addImage(imgData, 'PNG', margin, position, contentWidth, totalPdfHeight);
+            drawPageMasks();
+            heightLeft -= contentHeightPerPage;
         }
 
         // 4. Save the PDF
