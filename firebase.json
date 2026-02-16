@@ -28,28 +28,8 @@
         "function": "generate_recipe"
       },
       {
-        "source": "/api/ingredients/search",
-        "function": "search_ingredients"
-      },
-      {
-        "source": "/api/ingredients/update",
-        "function": "update_ingredient"
-      },
-      {
-        "source": "/api/ingredients",
-        "function": "add_ingredient"
-      },
-      {
-        "source": "/api/ingredient-list/add",
-        "function": "add_to_ingredient_list"
-      },
-      {
-        "source": "/api/ingredient-list/remove",
-        "function": "remove_from_ingredient_list"
-      },
-      {
-        "source": "/api/ingredient-list",
-        "function": "get_ingredient_list"
+        "source": "/api/get_shopping_list",
+        "function": "get_shopping_list"
       },
       {
         "source": "**",

@@ -1,4 +1,5 @@
-import { auth } from "./firebase";
+import { auth, db } from "./firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const getAuthToken = async () => {
   const user = auth.currentUser;
@@ -26,10 +27,79 @@ export const generateRecipeAPI = async (week, ingredients) => {
   return response.json();
 };
 
-export const searchIngredientsAPI = async (query) => {
+export const getUserIngredients = async () => {
+  const user = auth.currentUser;
+  if (!user) return []; // Or throw logic
+
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    const data = userSnap.data();
+    return data.ingredient_list || [];
+  }
+  return [];
+};
+
+export const saveUserIngredients = async (ingredients) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not authenticated");
+
+  const userRef = doc(db, "users", user.uid);
+  // Merge: true to update only the ingredient_list field
+  await setDoc(userRef, { ingredient_list: ingredients }, { merge: true });
+};
+
+export const getShoppingListAPI = async (recipeIngredients) => {
   const token = await getAuthToken();
 
-  const response = await fetch(`/api/ingredients/search?q=${encodeURIComponent(query)}`, {
+  const response = await fetch("/api/get_shopping_list", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ recipe_ingredients: recipeIngredients })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to fetch shopping list");
+  }
+
+  return response.json();
+};
+
+// --- Favorites API (US-6) ---
+
+export const saveFavoriteAPI = async (recipe, week) => {
+  const token = await getAuthToken();
+
+  const response = await fetch("/api/save_favorite", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      recipe_title: recipe.title,
+      recipe_content: recipe,
+      week,
+    })
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to save favorite");
+  }
+
+  return response.json();
+};
+
+export const getFavoritesAPI = async () => {
+  const token = await getAuthToken();
+
+  const response = await fetch("/api/get_favorites", {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${token}`
@@ -38,107 +108,27 @@ export const searchIngredientsAPI = async (query) => {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(errorText || "Failed to search ingredients");
+    throw new Error(errorText || "Failed to fetch favorites");
   }
 
   return response.json();
 };
 
-export const addIngredientAPI = async (name, nameKo, category) => {
+export const deleteFavoriteAPI = async (favoriteId) => {
   const token = await getAuthToken();
 
-  const response = await fetch("/api/ingredients", {
+  const response = await fetch("/api/delete_favorite", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`
     },
-    body: JSON.stringify({ name, name_ko: nameKo, category })
+    body: JSON.stringify({ favorite_id: favoriteId })
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(errorText || "Failed to add ingredient");
-  }
-
-  return response.json();
-};
-
-export const getIngredientListAPI = async () => {
-  const token = await getAuthToken();
-
-  const response = await fetch("/api/ingredient-list", {
-    method: "GET",
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Failed to fetch ingredient list");
-  }
-
-  return response.json();
-};
-
-export const addToIngredientListAPI = async (ingredientId, name, nameKo, category, quantity) => {
-  const token = await getAuthToken();
-
-  const response = await fetch("/api/ingredient-list/add", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify({ ingredient_id: ingredientId, name, name_ko: nameKo, category, quantity })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    const err = new Error(errorText || "Failed to add to ingredient list");
-    err.status = response.status;
-    throw err;
-  }
-
-  return response.json();
-};
-
-export const removeFromIngredientListAPI = async (id) => {
-  const token = await getAuthToken();
-
-  const response = await fetch("/api/ingredient-list/remove", {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify({ id })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Failed to remove from ingredient list");
-  }
-
-  return response.json();
-};
-
-export const updateIngredientAPI = async (id, name, nameKo, category) => {
-  const token = await getAuthToken();
-
-  const response = await fetch("/api/ingredients/update", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify({ id, name, name_ko: nameKo, category })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Failed to update ingredient");
+    throw new Error(errorText || "Failed to delete favorite");
   }
 
   return response.json();

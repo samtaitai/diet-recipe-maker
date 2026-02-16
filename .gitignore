@@ -128,6 +128,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+# Design reference assets
+design_reference/
+
 # Python
 functions/venv
 functions/__pycache__
@@ -142,3 +145,6 @@ functions/*.pyc
 !firestore.rules
 !diet-rules.json
 !src/locales/*.json
+
+# Firebase
+.firebase/

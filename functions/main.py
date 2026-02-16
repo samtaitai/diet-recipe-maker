@@ -122,7 +122,17 @@ def generate_recipe(req: https_fn.Request) -> https_fn.Response:
         f"Use ONLY: {allowed}. "
         f"Strictly avoid: {forbidden}. "
         f"User available ingredients: {ingredients}. "
-        f"Generate a recipe in JSON format with fields: title, ingredients (list), instructions (list), macros (map)."
+        f"Generate a recipe in STRICT JSON format with the following fields:\n"
+        f"- title: string\n"
+        f"- health_benefit: string (short subtitle)\n"
+        f"- ingredients: list of strings\n"
+        f"- instructions: list of strings\n"
+        f"- macros: object {{ calories: string, protein: string, carbs: string, fat: string }}\n"
+        f"- prep_time: string\n"
+        f"- cook_time: string\n"
+        f"- servings: string\n"
+        f"- wellness_tip: string (custom tip for Week {week})\n"
+        f"Ensure values are concise/numeric where appropriate."
     )
 
     try:
@@ -146,22 +156,26 @@ def generate_recipe(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response(f"AI Generation Error: {str(e)}", status=500)
 
 
-# --- Ingredient Functions ---
+# --- Shopping List Functions ---
 
 @https_fn.on_request(
     cors=options.CorsOptions(
         cors_origins=["*"],
-        cors_methods=["GET", "OPTIONS"],
+        cors_methods=["POST", "OPTIONS"],
     )
 )
-def search_ingredients(req: https_fn.Request) -> https_fn.Response:
-    """Search ingredients by name prefix."""
+def get_shopping_list(req: https_fn.Request) -> https_fn.Response:
+    """
+    Compares recipe ingredients against the user's personal inventory.
+    Categorizes items into 'have' and 'need_to_buy'.
+    """
     if req.method == "OPTIONS":
         return https_fn.Response(status=204)
 
-    if req.method != "GET":
+    if req.method != "POST":
         return https_fn.Response("Method not allowed", status=405)
 
+    # 1. Authentication
     try:
         uid, _ = verify_auth(req)
     except ValueError as e:
@@ -169,34 +183,170 @@ def search_ingredients(req: https_fn.Request) -> https_fn.Response:
     except Exception as e:
         return https_fn.Response(f"Unauthorized: Invalid token. {str(e)}", status=401)
 
-    q = req.args.get("q", "").strip().lower()
-    if not q:
+    # 2. Parse Input
+    data = req.get_json() or {}
+    recipe_ingredients = data.get("recipe_ingredients", [])
+
+    if not isinstance(recipe_ingredients, list):
         return https_fn.Response(
-            json.dumps({"error": "Query parameter 'q' is required"}),
+            json.dumps({"error": "Field 'recipe_ingredients' must be a list"}),
             status=400,
             headers={"Content-Type": "application/json"},
         )
 
+    # 3. Retrieve User Inventory
     db = get_db()
-    results = (
-        db.collection("ingredients")
-        .where("name", ">=", q)
-        .where("name", "<", q + "\uf8ff")
-        .limit(20)
-        .stream()
+    user_ref = db.collection("users").document(uid)
+    user_doc = user_ref.get()
+    
+    user_ingredients = []
+    if user_doc.exists:
+        user_data = user_doc.to_dict()
+        # US-1/US-7: ingredient_list is an array of strings
+        raw_list = user_data.get("ingredient_list", [])
+        if isinstance(raw_list, list):
+            user_ingredients = [str(x).lower().strip() for x in raw_list]
+
+    # 4. Comparison Logic
+    have = []
+    need_to_buy = []
+
+    for recipe_ing in recipe_ingredients:
+        recipe_ing_clean = recipe_ing.lower().strip()
+        
+        found = False
+        for user_ing_name in user_ingredients:
+            # Check if user's ingredient name is part of the recipe string 
+            # (e.g., "chicken" is in "300g chicken breast")
+            if user_ing_name and user_ing_name in recipe_ing_clean:
+                found = True
+                break
+        
+        if found:
+            have.append(recipe_ing)
+        else:
+            need_to_buy.append(recipe_ing)
+
+    # 5. Response
+    return https_fn.Response(
+        json.dumps({
+            "have": have,
+            "need_to_buy": need_to_buy
+        }),
+        status=200,
+        headers={"Content-Type": "application/json"}
     )
 
-    ingredients = []
-    for doc in results:
-        data = doc.to_dict()
-        data["id"] = doc.id
-        # Convert timestamps to ISO strings for JSON serialization
-        if "created_at" in data and data["created_at"]:
-            data["created_at"] = data["created_at"].isoformat()
-        ingredients.append(data)
+
+# --- Favorites CRUD (US-6) ---
+
+@https_fn.on_request(
+    cors=options.CorsOptions(
+        cors_origins=["*"],
+        cors_methods=["POST", "OPTIONS"],
+    )
+)
+def save_favorite(req: https_fn.Request) -> https_fn.Response:
+    """
+    Saves a recipe to the user's favorites sub-collection.
+    Expects JSON body: { recipe_title, recipe_content, week }
+    """
+    if req.method == "OPTIONS":
+        return https_fn.Response(status=204)
+
+    if req.method != "POST":
+        return https_fn.Response("Method not allowed", status=405)
+
+    # Auth
+    try:
+        uid, _ = verify_auth(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+    except Exception as e:
+        return https_fn.Response(f"Unauthorized: Invalid token. {str(e)}", status=401)
+
+    # Parse body
+    data = req.get_json() or {}
+    recipe_title = data.get("recipe_title")
+    recipe_content = data.get("recipe_content")
+    week = data.get("week")
+
+    if not recipe_title or not recipe_content:
+        return https_fn.Response(
+            json.dumps({"error": "Missing 'recipe_title' or 'recipe_content'"}),
+            status=400,
+            headers={"Content-Type": "application/json"},
+        )
+
+    # Save to Firestore
+    db = get_db()
+    fav_ref = db.collection("users").document(uid).collection("favorites")
+
+    # Check for duplicate title to prevent accidental re-saves
+    existing = fav_ref.where("recipe_title", "==", recipe_title).limit(1).get()
+    if len(list(existing)) > 0:
+        return https_fn.Response(
+            json.dumps({"error": "Recipe already saved to favorites"}),
+            status=409,
+            headers={"Content-Type": "application/json"},
+        )
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    doc_ref = fav_ref.add({
+        "recipe_title": recipe_title,
+        "recipe_content": recipe_content,
+        "week": week,
+        "created_at": now,
+    })
 
     return https_fn.Response(
-        json.dumps(ingredients),
+        json.dumps({"id": doc_ref[1].id, "message": "Favorite saved"}),
+        status=201,
+        headers={"Content-Type": "application/json"},
+    )
+
+
+@https_fn.on_request(
+    cors=options.CorsOptions(
+        cors_origins=["*"],
+        cors_methods=["GET", "OPTIONS"],
+    )
+)
+def get_favorites(req: https_fn.Request) -> https_fn.Response:
+    """
+    Returns all favorites for the authenticated user, ordered by created_at descending.
+    """
+    if req.method == "OPTIONS":
+        return https_fn.Response(status=204)
+
+    if req.method != "GET":
+        return https_fn.Response("Method not allowed", status=405)
+
+    # Auth
+    try:
+        uid, _ = verify_auth(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+    except Exception as e:
+        return https_fn.Response(f"Unauthorized: Invalid token. {str(e)}", status=401)
+
+    # Fetch favorites
+    db = get_db()
+    fav_ref = db.collection("users").document(uid).collection("favorites")
+    docs = fav_ref.order_by("created_at", direction=google_firestore.Query.DESCENDING).get()
+
+    favorites = []
+    for doc in docs:
+        fav_data = doc.to_dict()
+        # Convert Firestore timestamp for JSON serialization
+        created_at = fav_data.get("created_at")
+        if created_at and hasattr(created_at, "isoformat"):
+            fav_data["created_at"] = created_at.isoformat()
+        fav_data["id"] = doc.id
+        favorites.append(fav_data)
+
+    return https_fn.Response(
+        json.dumps({"favorites": favorites}),
         status=200,
         headers={"Content-Type": "application/json"},
     )
@@ -208,14 +358,19 @@ def search_ingredients(req: https_fn.Request) -> https_fn.Response:
         cors_methods=["POST", "OPTIONS"],
     )
 )
-def add_ingredient(req: https_fn.Request) -> https_fn.Response:
-    """Add a new ingredient to the global database."""
+def delete_favorite(req: https_fn.Request) -> https_fn.Response:
+    """
+    Deletes a specific favorite by its document ID.
+    Expects JSON body: { favorite_id }
+    Using POST instead of DELETE for broad CORS compatibility.
+    """
     if req.method == "OPTIONS":
         return https_fn.Response(status=204)
 
     if req.method != "POST":
         return https_fn.Response("Method not allowed", status=405)
 
+    # Auth
     try:
         uid, _ = verify_auth(req)
     except ValueError as e:
@@ -223,306 +378,33 @@ def add_ingredient(req: https_fn.Request) -> https_fn.Response:
     except Exception as e:
         return https_fn.Response(f"Unauthorized: Invalid token. {str(e)}", status=401)
 
+    # Parse body
     data = req.get_json() or {}
-    name = data.get("name", "").strip().lower()
-    name_ko = data.get("name_ko", "").strip()
-    category = data.get("category", "other").strip().lower()
+    favorite_id = data.get("favorite_id")
 
-    if not name:
+    if not favorite_id:
         return https_fn.Response(
-            json.dumps({"error": "Field 'name' is required"}),
+            json.dumps({"error": "Missing 'favorite_id'"}),
             status=400,
             headers={"Content-Type": "application/json"},
         )
 
-    valid_categories = {"protein", "vegetable", "fruit", "grain", "dairy", "spice", "other"}
-    if category not in valid_categories:
-        category = "other"
-
+    # Delete from Firestore
     db = get_db()
-
-    # Check for existing ingredient with the same name
-    existing = (
-        db.collection("ingredients")
-        .where("name", "==", name)
-        .limit(1)
-        .stream()
-    )
-    if any(True for _ in existing):
-        return https_fn.Response(
-            json.dumps({"error": f"Ingredient '{name}' already exists"}),
-            status=409,
-            headers={"Content-Type": "application/json"},
-        )
-
-    doc_ref = db.collection("ingredients").document()
-    doc_data = {
-        "name": name,
-        "name_ko": name_ko,
-        "category": category,
-        "created_by": uid,
-        "created_at": google_firestore.SERVER_TIMESTAMP,
-    }
-    doc_ref.set(doc_data)
-
-    # Return the created doc (with id, without server timestamp)
-    doc_data["id"] = doc_ref.id
-    doc_data["created_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-    return https_fn.Response(
-        json.dumps(doc_data),
-        status=201,
-        headers={"Content-Type": "application/json"},
-    )
-
-
-@https_fn.on_request(
-    cors=options.CorsOptions(
-        cors_origins=["*"],
-        cors_methods=["PUT", "OPTIONS"],
-    )
-)
-def update_ingredient(req: https_fn.Request) -> https_fn.Response:
-    """Update an existing ingredient."""
-    if req.method == "OPTIONS":
-        return https_fn.Response(status=204)
-
-    if req.method != "PUT":
-        return https_fn.Response("Method not allowed", status=405)
-
-    try:
-        uid, _ = verify_auth(req)
-    except ValueError as e:
-        return https_fn.Response(str(e), status=401)
-    except Exception as e:
-        return https_fn.Response(f"Unauthorized: Invalid token. {str(e)}", status=401)
-
-    data = req.get_json() or {}
-    doc_id = data.get("id", "").strip()
-    name = data.get("name", "").strip().lower()
-    name_ko = data.get("name_ko", "").strip()
-    category = data.get("category", "").strip().lower()
-
-    if not doc_id:
-        return https_fn.Response(
-            json.dumps({"error": "Field 'id' is required"}),
-            status=400,
-            headers={"Content-Type": "application/json"},
-        )
-
-    db = get_db()
-    doc_ref = db.collection("ingredients").document(doc_id)
-    doc = doc_ref.get()
+    fav_doc_ref = db.collection("users").document(uid).collection("favorites").document(favorite_id)
+    doc = fav_doc_ref.get()
 
     if not doc.exists:
         return https_fn.Response(
-            json.dumps({"error": "Ingredient not found"}),
+            json.dumps({"error": "Favorite not found"}),
             status=404,
             headers={"Content-Type": "application/json"},
         )
 
-    doc_data = doc.to_dict()
-    created_by = doc_data.get("created_by", "")
-
-    # Only allow update if user created it or it's a system ingredient
-    if created_by != uid and created_by != "system":
-        return https_fn.Response(
-            json.dumps({"error": "Forbidden: You can only update your own or system ingredients"}),
-            status=403,
-            headers={"Content-Type": "application/json"},
-        )
-
-    update_fields = {}
-    if name:
-        update_fields["name"] = name
-    if name_ko:
-        update_fields["name_ko"] = name_ko
-    if category:
-        valid_categories = {"protein", "vegetable", "fruit", "grain", "dairy", "spice", "other"}
-        if category in valid_categories:
-            update_fields["category"] = category
-
-    if not update_fields:
-        return https_fn.Response(
-            json.dumps({"error": "No valid fields to update"}),
-            status=400,
-            headers={"Content-Type": "application/json"},
-        )
-
-    doc_ref.update(update_fields)
-
-    # Return updated doc
-    updated = doc_ref.get().to_dict()
-    updated["id"] = doc_id
-    if "created_at" in updated and updated["created_at"]:
-        updated["created_at"] = updated["created_at"].isoformat()
+    fav_doc_ref.delete()
 
     return https_fn.Response(
-        json.dumps(updated),
-        status=200,
-        headers={"Content-Type": "application/json"},
-    )
-
-
-# --- Personal Ingredient List Functions ---
-
-@https_fn.on_request(
-    cors=options.CorsOptions(
-        cors_origins=["*"],
-        cors_methods=["GET", "OPTIONS"],
-    )
-)
-def get_ingredient_list(req: https_fn.Request) -> https_fn.Response:
-    """Fetch all ingredients in the user's personal list."""
-    if req.method == "OPTIONS":
-        return https_fn.Response(status=204)
-
-    if req.method != "GET":
-        return https_fn.Response("Method not allowed", status=405)
-
-    try:
-        uid, _ = verify_auth(req)
-    except ValueError as e:
-        return https_fn.Response(str(e), status=401)
-    except Exception as e:
-        return https_fn.Response(f"Unauthorized: Invalid token. {str(e)}", status=401)
-
-    db = get_db()
-    docs = (
-        db.collection("users").document(uid)
-        .collection("ingredient_list")
-        .order_by("added_at", direction=google_firestore.Query.DESCENDING)
-        .stream()
-    )
-
-    items = []
-    for doc in docs:
-        data = doc.to_dict()
-        data["id"] = doc.id
-        if "added_at" in data and data["added_at"]:
-            data["added_at"] = data["added_at"].isoformat()
-        items.append(data)
-
-    return https_fn.Response(
-        json.dumps(items),
-        status=200,
-        headers={"Content-Type": "application/json"},
-    )
-
-
-@https_fn.on_request(
-    cors=options.CorsOptions(
-        cors_origins=["*"],
-        cors_methods=["POST", "OPTIONS"],
-    )
-)
-def add_to_ingredient_list(req: https_fn.Request) -> https_fn.Response:
-    """Add an ingredient to the user's personal list."""
-    if req.method == "OPTIONS":
-        return https_fn.Response(status=204)
-
-    if req.method != "POST":
-        return https_fn.Response("Method not allowed", status=405)
-
-    try:
-        uid, _ = verify_auth(req)
-    except ValueError as e:
-        return https_fn.Response(str(e), status=401)
-    except Exception as e:
-        return https_fn.Response(f"Unauthorized: Invalid token. {str(e)}", status=401)
-
-    data = req.get_json() or {}
-    ingredient_id = data.get("ingredient_id", "").strip()
-    name = data.get("name", "").strip()
-    name_ko = data.get("name_ko", "").strip()
-    category = data.get("category", "other").strip()
-    quantity = data.get("quantity", "").strip()
-
-    if not ingredient_id or not name:
-        return https_fn.Response(
-            json.dumps({"error": "Fields 'ingredient_id' and 'name' are required"}),
-            status=400,
-            headers={"Content-Type": "application/json"},
-        )
-
-    db = get_db()
-    user_list_ref = db.collection("users").document(uid).collection("ingredient_list")
-
-    # Check for duplicate ingredient_id
-    existing = (
-        user_list_ref
-        .where("ingredient_id", "==", ingredient_id)
-        .limit(1)
-        .stream()
-    )
-    if any(True for _ in existing):
-        return https_fn.Response(
-            json.dumps({"error": "Ingredient already in your list"}),
-            status=409,
-            headers={"Content-Type": "application/json"},
-        )
-
-    doc_ref = user_list_ref.document()
-    doc_data = {
-        "ingredient_id": ingredient_id,
-        "name": name,
-        "name_ko": name_ko,
-        "category": category,
-        "quantity": quantity,
-        "added_at": google_firestore.SERVER_TIMESTAMP,
-    }
-    doc_ref.set(doc_data)
-
-    doc_data["id"] = doc_ref.id
-    doc_data["added_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
-    return https_fn.Response(
-        json.dumps(doc_data),
-        status=201,
-        headers={"Content-Type": "application/json"},
-    )
-
-
-@https_fn.on_request(
-    cors=options.CorsOptions(
-        cors_origins=["*"],
-        cors_methods=["DELETE", "OPTIONS"],
-    )
-)
-def remove_from_ingredient_list(req: https_fn.Request) -> https_fn.Response:
-    """Remove an ingredient from the user's personal list."""
-    if req.method == "OPTIONS":
-        return https_fn.Response(status=204)
-
-    if req.method != "DELETE":
-        return https_fn.Response("Method not allowed", status=405)
-
-    try:
-        uid, _ = verify_auth(req)
-    except ValueError as e:
-        return https_fn.Response(str(e), status=401)
-    except Exception as e:
-        return https_fn.Response(f"Unauthorized: Invalid token. {str(e)}", status=401)
-
-    data = req.get_json() or {}
-    doc_id = data.get("id", "").strip()
-
-    if not doc_id:
-        return https_fn.Response(
-            json.dumps({"error": "Field 'id' is required"}),
-            status=400,
-            headers={"Content-Type": "application/json"},
-        )
-
-    db = get_db()
-    doc_ref = (
-        db.collection("users").document(uid)
-        .collection("ingredient_list").document(doc_id)
-    )
-    doc_ref.delete()
-
-    return https_fn.Response(
-        json.dumps({"success": True}),
+        json.dumps({"message": "Favorite deleted"}),
         status=200,
         headers={"Content-Type": "application/json"},
     )

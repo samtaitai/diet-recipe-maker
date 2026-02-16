@@ -1,0 +1,71 @@
+/* src/styles/print.css */
+
+/* Hidden elements during print */
+@media print {
+
+    nav,
+    footer,
+    .no-print,
+    button,
+    .floating-action-button,
+    .wellness-hint-bubble {
+        display: none !important;
+    }
+
+    /* Body background & typography */
+    body {
+        background: white !important;
+        color: #1a1a1a !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Formatting layout for A4 */
+    .print-view-container {
+        width: 210mm;
+        margin: 0 auto;
+        padding: 20mm;
+        box-shadow: none;
+        border: none;
+    }
+
+    /* Typography Refinement */
+    h1,
+    h2,
+    h3 {
+        font-family: 'Playfair Display', 'Merriweather', serif !important;
+        color: #000 !important;
+    }
+
+    p,
+    li,
+    td {
+        font-family: 'Inter', 'Roboto', sans-serif !important;
+        line-height: 1.6;
+        color: #333 !important;
+    }
+
+    /* Macros Section: High contrast cards */
+    .macro-card {
+        border: 1px solid #ddd !important;
+        background: transparent !important;
+        break-inside: avoid;
+    }
+
+    /* Instructions: Prevent break inside <li> */
+    .instruction-step {
+        break-inside: avoid;
+        margin-bottom: 12pt;
+    }
+
+    /* Force page breaks if needed */
+    .page-break-before {
+        page-break-before: always;
+    }
+
+    /* QR Code sizing */
+    .qr-code-container {
+        text-align: right;
+        margin-top: 20px;
+    }
+}

@@ -4,43 +4,42 @@ import { useTranslation } from "react-i18next";
 const DietForm = ({ onSubmit, isLoading }) => {
     const { t } = useTranslation();
     const [week, setWeek] = useState(1);
-    const [ingredients, setIngredients] = useState("");
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit(week, ingredients);
+        onSubmit(week);
     };
 
     return (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '500px', margin: '0 auto' }}>
-            <label>
-                {t('week_label')}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '500px', margin: '2rem auto 0' }}>
+            <label style={{ fontWeight: 600 }}>
+                {t('week_label') || "Select Diet Week"}
                 <select
                     value={week}
                     onChange={(e) => setWeek(Number(e.target.value))}
-                    style={{ width: '100%', padding: '8px', marginTop: '5px' }}
+                    style={{
+                        width: '100%',
+                        padding: '12px',
+                        marginTop: '8px',
+                        borderRadius: '12px',
+                        border: '1px solid #e7e5e4',
+                        backgroundColor: '#ffffff',
+                        fontSize: '1rem'
+                    }}
                 >
-                    <option value={1}>Week 1</option>
-                    <option value={2}>Week 2</option>
-                    <option value={3}>Week 3</option>
-                    <option value={4}>Week 4</option>
+                    <option value={1}>{t('week_1') || "Week 1"}</option>
+                    <option value={2}>{t('week_2') || "Week 2"}</option>
+                    <option value={3}>{t('week_3') || "Week 3"}</option>
+                    <option value={4}>{t('week_4') || "Week 4"}</option>
                 </select>
             </label>
 
-            <label>
-                {t('ingredients_label')}
-                <textarea
-                    value={ingredients}
-                    onChange={(e) => setIngredients(e.target.value)}
-                    placeholder={t('ingredients_placeholder')}
-                    rows={4}
-                    style={{ width: '100%', padding: '8px', marginTop: '5px' }}
-                    required
-                />
-            </label>
-
-            <button type="submit" disabled={isLoading} style={{ padding: '10px', fontSize: '1rem' }}>
-                {isLoading ? t('generating') : t('generate_button')}
+            <button
+                type="submit"
+                disabled={isLoading}
+                className="btn-generate"
+            >
+                {isLoading ? (t('generating') || "Generating...") : (`✨ ${t('generate_button') || "Generate Recipe"}`)}
             </button>
         </form>
     );
