@@ -10,7 +10,7 @@ const WELLNESS_HINTS = [
   "Spices like turmeric and ginger have anti-inflammatory benefits."
 ];
 
-function IngredientSearch({ ingredients = [], onAdd, onRemove, onClear }) {
+function IngredientSearch({ ingredients = [], onAdd, onRemove, onClear, onOpenInspiration }) {
   const { t } = useTranslation();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef(null);
@@ -84,7 +84,7 @@ function IngredientSearch({ ingredients = [], onAdd, onRemove, onClear }) {
       </div>
 
       {/* Main Input Container */}
-      <div style={{ marginTop: "1rem", marginBottom: "2rem" }}>
+      <div style={{ marginTop: "1rem", marginBottom: "0.5rem" }}>
         <div
           onClick={() => inputRef.current?.focus()}
           style={{
@@ -171,6 +171,27 @@ function IngredientSearch({ ingredients = [], onAdd, onRemove, onClear }) {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Inspiration Button */}
+      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+        <button
+          onClick={onOpenInspiration}
+          style={{
+            background: "none",
+            border: "none",
+            color: "var(--muted-fg)",
+            fontSize: "0.9rem",
+            cursor: "pointer",
+            textDecoration: "underline",
+            opacity: 0.8,
+            transition: "opacity 0.2s"
+          }}
+          onMouseOver={(e) => e.currentTarget.style.opacity = "1"}
+          onMouseOut={(e) => e.currentTarget.style.opacity = "0.8"}
+        >
+          💡 {t("need_inspiration")}
+        </button>
       </div>
     </div>
   );

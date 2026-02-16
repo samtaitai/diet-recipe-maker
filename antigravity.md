@@ -6,6 +6,12 @@
   - Any blockers or decisions needed
 - Commit messages: single line, concise. No verbose multi-line descriptions.
 
+## Skill Usage Preferences
+
+- **Plan First**: ALWAYS use the `generate-implementation-plan` skill before starting any non-trivial feature implementation. Save the plan to `/references/implementation-plan-[name].md`.
+- **Structured Execution**: ALWAYS use the `implement-plan` skill to execute changes based on a generated plan. Follow the phase-by-phase logic strictly.
+- **Situation**: Trigger these when the user asks to "implement", "create", "enhance", or "plan" a feature/user story.
+
 ## Knowledge Base & Technical Lessons
 
 ### 1. The "Two-Click" Save Button Issue (UI Stability)

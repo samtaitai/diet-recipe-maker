@@ -21,8 +21,6 @@ As a user, I want a modern, tag-based input field where I can enter ingredients 
 ### US-4: Generate recipe based on diet rules
 As a user, I want the system to create a recipe based on the pre-defined diet rule for my selected week, so that my meals comply with the Switch-On Diet program.
 
-### US-5: Shopping list from recipe vs. ingredient list (changed)
-As a user, I want the system to look up the ingredient list that I entered, compare it against the recipe it created, and show me a list of groceries I need to shop for, so I know exactly what to buy.
 
 ### US-6: Save favourite recipes (authenticated)
 As a user, I want to save my favourite recipes when I am logged in, so that I can revisit them later.
@@ -32,6 +30,12 @@ As a user, I want the system to save my current ingredient list when I am logged
 
 ### US-8: Export recipe as print-friendly PDF
 As a user, I want to publish each recipe as a PDF in a print-friendly format, so I can print or share it offline.
+
+### US-9: "Chef, up to you" Recipe Generation
+As a user, I want the system to create a recipe entirely based on the pre-defined allowed ingredient for my selected week, without any entry for ingredient list. I want an extra button called 'Chef, up to you' next to the current 'generate recipe'. Two button have different emoji and button color.
+
+### US-10: Recommended Ingredients Inspiration
+As a user, I want a "Need inspiration?" button below the ingredient input that opens a modal with categorized recommended ingredients (Proteins, Vegetables, Grains, Healthy Fats, Flavour Boosters). Clicking any ingredient adds it directly to my list, making it easier to build a diet-compliant recipe.
 
 ---
 
@@ -87,10 +91,6 @@ As a user, I want to publish each recipe as a PDF in a print-friendly format, so
 6.  **Generation:** Call Gemini. Request JSON output.
 7.  **Update:** Set `last_request_timestamp` to `now`. If authenticated, update `users/{uid}.ingredient_list`.
 
-### `getShoppingList` (Cloud Function — US-5)
-1.  **Input:** `recipe_ingredients` and `user_ingredients`.
-2.  **Comparison:** Diff recipe ingredients against what the user manually entered.
-3.  **Response:** Return `{ "have": [...], "need_to_buy": [...] }`.
 
 ### Favorites CRUD (US-6)
 * **Save:** Authenticated user saves a recipe to `users/{uid}/favorites`.
@@ -117,9 +117,6 @@ As a user, I want to publish each recipe as a PDF in a print-friendly format, so
     *   **Instruction Badges:** Numbered steps with circular badge styling.
     *   **Wellness Tip Section:** A dedicated block at the bottom for diet-specific advice.
 
-### Shopping List (US-5)
-* **Display:** After generation, a "Show Shopping List" toggle/section.
-* **List View:** Split into "In your pantry" and "Missing ingredients".
 
 ### Favourites (US-6)
 * **Styling:** Floating "Favourite" button on the recipe card.

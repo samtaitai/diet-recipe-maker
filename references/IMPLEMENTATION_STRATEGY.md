@@ -3,7 +3,7 @@
 ## Guiding Principles
 
 1. **Data layer first** — UI is meaningless without the backend and data models working correctly.
-2. **Auth-gated features depend on auth** — ingredients list, favourites, and shopping list all require a logged-in user. Auth already works, so we build on it.
+2. **Auth-gated features depend on auth** — ingredients list and favourites require a logged-in user. Auth already works, so we build on it.
 3. **Each phase delivers a usable increment** — the app should be functional (not broken) at the end of every phase.
 4. **Global database before personal data** — users need ingredients to exist before they can add them to their list.
 
@@ -40,19 +40,6 @@
 - Frontend: Implement the four macro-nutrition cards.
 - Frontend: Full-screen loading overlay with smooth animations.
 
----
-
-## Phase 3: Shopping List (US-5)
-
-**What:** Compare generated recipe against the manual entry list.
-
-**Why third:**
-- Depends on the manual list (Phase 1) and recipe generation (Phase 2).
-- Helps users identify what else they need.
-
-**Work:**
-- Backend/Frontend: Logic to diff recipe ingredients against the manual list.
-- UI: "What do I need to buy?" section after recipe generation.
 
 ---
 
@@ -91,12 +78,11 @@
 |-------|-------------|-----------|--------|
 | 1. Manual Entry & Persistence | US-1, US-7 | Nothing | Medium |
 | 2. Recipe Gen Refactor | US-1, US-4 | Phase 1 | Small |
-| 3. Shopping List | US-5 | Phase 1 + 2 | Small |
-| 4. Favourites | US-6 | Phase 2 | Medium |
-| 5. PDF Polish | US-8 | Phase 2 | Small |
+| 3. Favourites | US-6 | Phase 2 | Medium |
+| 4. PDF Polish | US-8 | Phase 2 | Small |
 
 ## Parallelization
 
-- **Phase 4 (Favourites)** can be built in parallel with Phase 3 since it's independent.
+- **Phase 3 (Favourites)** can be built in parallel with other features once Phase 2 is stable.
 - **Phase 5 (PDF)** can happen anytime after Phase 2 is stable.
 - **Firestore security rules** should be updated as each collection/structure is introduced.

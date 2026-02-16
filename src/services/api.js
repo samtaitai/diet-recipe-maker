@@ -27,11 +27,10 @@ export const generateRecipeAPI = async (week, ingredients) => {
   return response.json();
 };
 
-export const getUserIngredients = async () => {
-  const user = auth.currentUser;
-  if (!user) return []; // Or throw logic
+export const getUserIngredients = async (uid) => {
+  if (!uid) return [];
 
-  const userRef = doc(db, "users", user.uid);
+  const userRef = doc(db, "users", uid);
   const userSnap = await getDoc(userRef);
 
   if (userSnap.exists()) {
@@ -41,34 +40,14 @@ export const getUserIngredients = async () => {
   return [];
 };
 
-export const saveUserIngredients = async (ingredients) => {
-  const user = auth.currentUser;
-  if (!user) throw new Error("User not authenticated");
+export const saveUserIngredients = async (uid, ingredients) => {
+  if (!uid) throw new Error("User UID is required to save ingredients");
 
-  const userRef = doc(db, "users", user.uid);
+  const userRef = doc(db, "users", uid);
   // Merge: true to update only the ingredient_list field
   await setDoc(userRef, { ingredient_list: ingredients }, { merge: true });
 };
 
-export const getShoppingListAPI = async (recipeIngredients) => {
-  const token = await getAuthToken();
-
-  const response = await fetch("/api/get_shopping_list", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify({ recipe_ingredients: recipeIngredients })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Failed to fetch shopping list");
-  }
-
-  return response.json();
-};
 
 // --- Favorites API (US-6) ---
 

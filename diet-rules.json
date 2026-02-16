@@ -2,78 +2,143 @@
   {
     "id": "week_1",
     "allowed_ingredients": [
+      "soy sauce",
+      "turmeric",
+      "wasabi",
+      "red chili powder",
+      "perilla oil",
+      "green tea",
+      "avocado",
+      "cabbage",
+      "eggs",
+      "chicken",
+      "carrots",
       "tofu",
-      "chicken breast",
-      "white fish",
-      "leafy greens",
-      "broccoli",
+      "garlic",
+      "radish",
+      "multi-grain rice",
+      "coconut oil",
       "mushrooms",
-      "cucumbers",
-      "plain yogurt (low fat)",
-      "protein powder"
+      "broccoli",
+      "fish",
+      "sashimi",
+      "boiled pork (suyuk)",
+      "vinegar",
+      "brown rice",
+      "black pepper",
+      "onions",
+      "soft tofu",
+      "olive oil",
+      "cucumber",
+      "plain yogurt",
+      "seafood",
+      "seaweed",
+      "herb tea"
     ],
     "forbidden_ingredients": [
-      "grains",
-      "legumes",
-      "fruit",
-      "potatoes",
+      "soft drinks",
+      "cookies/snacks",
+      "ice cream",
+      "juice",
       "sugar",
+      "bread",
+      "ramen",
+      "pasta",
       "alcohol",
-      "caffeine",
-      "red meat"
+      "pork belly (samgyeopsal)",
+      "ribs (galbi)",
+      "chitterlings (gopchang)",
+      "donuts",
+      "frozen pizza",
+      "salted seafood (jeotgal)",
+      "soups/stews with heavy broth"
     ],
-    "rules_text": "Phase 1 (Week 1) focuses on resetting insulin sensitivity. Only 4 shakes/liquid meals and 1 solid meal consisting of protein and non-starchy vegetables are allowed. No carbohydrates or intense exercise."
+    "rules_text": "Days 1–3: Gut-resting period (protein shakes only). Days 4–7: Low-carb meal for lunch (half a bowl of multi-grain rice with a protein-rich side dish). Drink more than 2 liters of water daily. Complete dinner 4 hours before bedtime."
   },
   {
     "id": "week_2",
     "allowed_ingredients": [
-      "tofu",
-      "chicken breast",
-      "white fish",
-      "beef (lean)",
-      "pork (lean)",
-      "brown rice (half bowl)",
-      "sweet potato (small)",
-      "all green vegetables",
-      "eggs"
+      "all week 1 foods",
+      "legumes",
+      "nuts",
+      "black coffee",
+      "milk",
+      "cheese"
     ],
     "forbidden_ingredients": [
+      "soft drinks",
+      "cookies/snacks",
+      "ice cream",
+      "juice",
       "sugar",
+      "bread",
+      "ramen",
+      "pasta",
       "alcohol",
-      "caffeine",
-      "processed flour",
-      "fried foods"
+      "pork belly (samgyeopsal)",
+      "ribs (galbi)",
+      "chitterlings (gopchang)",
+      "donuts",
+      "frozen pizza",
+      "salted seafood (jeotgal)",
+      "soups/stews with heavy broth"
     ],
-    "rules_text": "Phase 2 (Week 2) introduces a 'stimulus meal' (moderate carbs) for lunch. Intermittent fasting is started (14-16 hours). Red meat is now allowed if lean."
+    "rules_text": "Perform a 24-hour fast once a week. Consume protein shakes twice a day and eat two regular meals. Do not consume carbohydrates for dinner. Drink more than 2 liters of water daily. Complete dinner 4 hours before bedtime."
   },
   {
     "id": "week_3",
     "allowed_ingredients": [
-      "all ingredients from week 2",
-      "blueberries",
-      "nuts (limited)",
-      "whole grain bread"
+      "all week 2 foods",
+      "sweet pumpkin",
+      "tomatoes",
+      "bananas",
+      "berries",
+      "sweet potatoes"
     ],
     "forbidden_ingredients": [
+      "soft drinks",
+      "cookies/snacks",
+      "ice cream",
+      "juice",
       "sugar",
+      "bread",
+      "ramen",
+      "pasta",
       "alcohol",
-      "heavy cream",
-      "trans fats"
+      "pork belly (samgyeopsal)",
+      "ribs (galbi)",
+      "chitterlings (gopchang)",
+      "donuts",
+      "frozen pizza",
+      "salted seafood (jeotgal)",
+      "soups/stews with heavy broth"
     ],
-    "rules_text": "Phase 3 (Week 3) increases physical activity. High-intensity interval training (HIIT) is recommended. The diet remains similar to Week 2 but adds limited healthy fats and low-sugar fruits."
+    "rules_text": "Perform a 24-hour fast twice a week (non-consecutive). Consume protein shakes twice a day and eat two regular meals. Do not consume carbohydrates for dinner. Incorporate high-intensity exercise to increase muscle mass. Drink more than 2 liters of water daily and complete dinner 4 hours before bedtime."
   },
   {
     "id": "week_4",
     "allowed_ingredients": [
-      "all ingredients from week 3",
-      "most whole foods",
-      "moderate fruit"
+      "all week 3 foods",
+      "fruits"
     ],
     "forbidden_ingredients": [
-      "excessive sugar",
-      "processed snacks",
-      "liquid calories"
+      "soft drinks",
+      "cookies/snacks",
+      "ice cream",
+      "juice",
+      "sugar",
+      "bread",
+      "ramen",
+      "pasta",
+      "alcohol",
+      "pork belly (samgyeopsal)",
+      "ribs (galbi)",
+      "chitterlings (gopchang)",
+      "donuts",
+      "frozen pizza",
+      "salted seafood (jeotgal)",
+      "soups/stews with heavy broth"
     ],
-    "rules_text": "Phase 4 (Week 4) is the maintenance preparation phase. Focus on long-term sustainability while keeping the intermittent fasting habit and high protein intake."
+    "rules_text": "Perform a 24-hour fast three times a week (non-consecutive). Eat fruit in the morning. Have low-carb meals for both lunch and dinner. Drink more than 2 liters of water daily and complete dinner 4 hours before bedtime."
   }
 ]

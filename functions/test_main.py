@@ -7,66 +7,14 @@ from flask import Flask
 app = Flask(__name__)
 
 # Import main functions
-from main import generate_recipe, get_shopping_list
+from main import generate_recipe
 
 @pytest.fixture
 def app_context():
     with app.test_request_context():
         yield
 
-@patch("main.verify_auth")
-def test_get_shopping_list_unauthorized(mock_verify_auth, app_context):
-    mock_verify_auth.side_effect = ValueError("Unauthorized")
-    req = Mock(method="POST")
-    req.headers = {}
-    
-    res = get_shopping_list(req)
-    
-    assert res.status_code == 401
-    assert "Unauthorized" in res.data.decode()
 
-@patch("main.verify_auth")
-@patch("main.get_db")
-def test_get_shopping_list_success(mock_get_db, mock_verify_auth, app_context):
-    # 1. Mock Auth
-    mock_verify_auth.return_value = ("test_uid", {})
-
-    # 2. Mock Firestore Inventory
-    mock_db = MagicMock()
-    mock_get_db.return_value = mock_db
-    
-    # Mock user document with ingredient_list
-    mock_user_doc = MagicMock()
-    mock_user_doc.exists = True
-    mock_user_doc.to_dict.return_value = {
-        "ingredient_list": ["Chicken", "Olive Oil"]
-    }
-    
-    mock_db.collection.return_value.document.return_value.get.return_value = mock_user_doc
-
-    # 3. Setup Request
-    req = Mock(method="POST")
-    req.headers = {"Authorization": "Bearer valid_token"}
-    req.get_json.return_value = {
-        "recipe_ingredients": [
-            "500g Chicken breast",
-            "1 tsp Salt",
-            "2 tbsp Olive Oil",
-            "1 head of Cabbage"
-        ]
-    }
-    
-    # 4. Call
-    res = get_shopping_list(req)
-    
-    # 5. Assert
-    assert res.status_code == 200
-    data = json.loads(res.data.decode())
-    
-    assert "500g Chicken breast" in data["have"]
-    assert "2 tbsp Olive Oil" in data["have"]
-    assert "1 tsp Salt" in data["need_to_buy"]
-    assert "1 head of Cabbage" in data["need_to_buy"]
 
 @patch("main.verify_auth")
 @patch("main.get_db")

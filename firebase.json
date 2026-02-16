@@ -28,8 +28,16 @@
         "function": "generate_recipe"
       },
       {
-        "source": "/api/get_shopping_list",
-        "function": "get_shopping_list"
+        "source": "/api/save_favorite",
+        "function": "save_favorite"
+      },
+      {
+        "source": "/api/get_favorites",
+        "function": "get_favorites"
+      },
+      {
+        "source": "/api/delete_favorite",
+        "function": "delete_favorite"
       },
       {
         "source": "**",

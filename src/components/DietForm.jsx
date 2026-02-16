@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from "react-i18next";
 
-const DietForm = ({ onSubmit, isLoading }) => {
+const DietForm = ({ week, onWeekChange, onSubmit, isLoading, hasIngredients }) => {
     const { t } = useTranslation();
-    const [week, setWeek] = useState(1);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -12,20 +11,12 @@ const DietForm = ({ onSubmit, isLoading }) => {
 
     return (
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '500px', margin: '2rem auto 0' }}>
-            <label style={{ fontWeight: 600 }}>
+            <label className="form-label-native">
                 {t('week_label') || "Select Diet Week"}
                 <select
                     value={week}
-                    onChange={(e) => setWeek(Number(e.target.value))}
-                    style={{
-                        width: '100%',
-                        padding: '12px',
-                        marginTop: '8px',
-                        borderRadius: '12px',
-                        border: '1px solid #e7e5e4',
-                        backgroundColor: '#ffffff',
-                        fontSize: '1rem'
-                    }}
+                    onChange={(e) => onWeekChange(Number(e.target.value))}
+                    className="form-select-native"
                 >
                     <option value={1}>{t('week_1') || "Week 1"}</option>
                     <option value={2}>{t('week_2') || "Week 2"}</option>
@@ -34,13 +25,27 @@ const DietForm = ({ onSubmit, isLoading }) => {
                 </select>
             </label>
 
-            <button
-                type="submit"
-                disabled={isLoading}
-                className="btn-generate"
-            >
-                {isLoading ? (t('generating') || "Generating...") : (`✨ ${t('generate_button') || "Generate Recipe"}`)}
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                <button
+                    type="button"
+                    onClick={() => onSubmit(week, false)}
+                    disabled={isLoading}
+                    className="btn-generate"
+                    style={{ flex: 1, marginTop: 0 }}
+                >
+                    {isLoading ? (t('generating') || "Generating...") : (`✨ ${t('generate_button') || "Generate Recipe"}`)}
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => onSubmit(week, true)}
+                    disabled={isLoading || hasIngredients}
+                    className="btn-generate btn-chef"
+                    style={{ flex: 1, marginTop: 0 }}
+                >
+                    {isLoading ? (t('generating') || "Generating...") : (`🧑‍🍳 ${t('chef_button') || "Chef, up to you"}`)}
+                </button>
+            </div>
         </form>
     );
 };

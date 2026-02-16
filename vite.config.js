@@ -16,10 +16,20 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/generateRecipe/, '/generate_recipe'),
       },
-      '/api/get_shopping_list': {
+      '/api/save_favorite': {
         target: FUNCTIONS_BASE,
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/get_shopping_list/, '/get_shopping_list'),
+        rewrite: (path) => path.replace(/^\/api\/save_favorite/, '/save_favorite'),
+      },
+      '/api/get_favorites': {
+        target: FUNCTIONS_BASE,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/get_favorites/, '/get_favorites'),
+      },
+      '/api/delete_favorite': {
+        target: FUNCTIONS_BASE,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/delete_favorite/, '/delete_favorite'),
       },
     },
   },
