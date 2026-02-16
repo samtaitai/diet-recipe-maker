@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from "react-i18next";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./services/firebase";
@@ -22,6 +22,8 @@ import AppHeader from "./components/AppHeader";
 import { validateIngredients } from "./utils/dietValidator";
 import './App.css';
 
+import BackdropLoader from "./components/BackdropLoader";
+
 function App() {
   const { t, i18n } = useTranslation();
   const [user, setUser] = useState(null);
@@ -37,11 +39,20 @@ function App() {
   const [ingredientList, setIngredientList] = useState([]);
 
 
+  const recipeSectionRef = useRef(null);
+
   // Modal & Selection State
   const [showInspirationModal, setShowInspirationModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [validationResults, setValidationResults] = useState({ prohibited: [], unknown: [] });
   const [pendingWeek, setPendingWeek] = useState(null);
+
+  // Scroll to recipe when generated or selected
+  useEffect(() => {
+    if (recipe && !loading && recipeSectionRef.current) {
+      recipeSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [recipe, loading]);
 
 
 
@@ -161,8 +172,6 @@ function App() {
   const handleSelectFavorite = (fav) => {
     setRecipe(fav.recipe_content);
     setCurrentWeek(fav.week || 1);
-    // Scroll to recipe
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleAddIngredient = async (newIngredient) => {
@@ -235,14 +244,16 @@ function App() {
 
           {error && <p style={{ color: 'red', textAlign: 'center', marginTop: '1rem' }}>{error}</p>}
           {recipe && (
-            <RecipeDisplay
-              recipe={recipe}
-              onDownloadPdf={handleDownloadPdf}
-              onSaveFavorite={handleSaveFavorite}
-              isFavorited={isFavorited}
-              isSaving={isSavingFavorite}
-              isLoggedIn={!!user}
-            />
+            <div ref={recipeSectionRef}>
+              <RecipeDisplay
+                recipe={recipe}
+                onDownloadPdf={handleDownloadPdf}
+                onSaveFavorite={handleSaveFavorite}
+                isFavorited={isFavorited}
+                isSaving={isSavingFavorite}
+                isLoggedIn={!!user}
+              />
+            </div>
           )}
 
           {user && (
@@ -276,6 +287,9 @@ function App() {
         <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
           <PrintView recipe={recipe} activeLanguage={i18n.language} />
         </div>
+
+
+        {(loading || isSavingFavorite) && <BackdropLoader />}
 
         <footer className="app-footer">
           <div className="footer-content">
