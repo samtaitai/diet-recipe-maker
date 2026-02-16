@@ -7,17 +7,19 @@ import {
   generateRecipeAPI,
   getUserIngredients,
   saveUserIngredients,
-  getShoppingListAPI,
   getFavoritesAPI,
   saveFavoriteAPI,
   deleteFavoriteAPI
 } from "./services/api";
 import DietForm from "./components/DietForm";
 import RecipeDisplay from "./components/RecipeDisplay";
-import AuthButton from "./components/AuthButton";
 import PrintView from "./components/PrintView";
 import IngredientSearch from "./components/IngredientSearch";
 import FavoritesList from "./components/FavoritesList";
+import ValidationModal from "./components/ValidationModal";
+import InspirationModal from "./components/InspirationModal";
+import AppHeader from "./components/AppHeader";
+import { validateIngredients } from "./utils/dietValidator";
 import './App.css';
 
 function App() {
@@ -34,14 +36,20 @@ function App() {
   const [error, setError] = useState(null);
   const [ingredientList, setIngredientList] = useState([]);
   const [ingredientListLoading, setIngredientListLoading] = useState(false);
-  const [shoppingList, setShoppingList] = useState(null);
-  const [shoppingListLoading, setShoppingListLoading] = useState(false);
+
+  // Modal & Selection State
+  const [showInspirationModal, setShowInspirationModal] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationResults, setValidationResults] = useState({ prohibited: [], unknown: [] });
+  const [pendingWeek, setPendingWeek] = useState(null);
+
   const printRef = useRef();
 
-  const fetchIngredientList = async () => {
+  const fetchIngredientList = async (uid) => {
+    if (!uid) return;
     setIngredientListLoading(true);
     try {
-      const list = await getUserIngredients();
+      const list = await getUserIngredients(uid);
       setIngredientList(list);
     } catch (err) {
       console.error("Failed to fetch ingredient list:", err);
@@ -68,37 +76,55 @@ function App() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        fetchIngredientList();
+        fetchIngredientList(currentUser.uid);
         fetchFavorites();
       } else {
         setIngredientList([]);
         setFavorites([]);
         setRecipe(null);
-        setShoppingList(null);
       }
     });
     return () => unsubscribe();
   }, []);
 
-  const handleGenerate = async (week) => {
+  const handleGenerate = async (week, isChefMode = false) => {
     if (!user) {
       alert("Please sign in first.");
       return;
     }
 
-    if (ingredientList.length === 0) {
+    if (!isChefMode && ingredientList.length === 0) {
       alert(t('ingredient_list_empty') || "Please add ingredients first.");
       return;
     }
 
+    if (isChefMode) {
+      await proceedWithGeneration(week, true);
+      return;
+    }
+
+    // Step 1: Validate Ingredients
+    const results = validateIngredients(ingredientList, week);
+    if (results.prohibited.length > 0 || results.unknown.length > 0) {
+      setValidationResults(results);
+      setPendingWeek(week);
+      setShowValidationModal(true);
+      return;
+    }
+
+    // Step 2: Proceed if valid
+    await proceedWithGeneration(week, false);
+  };
+
+  const proceedWithGeneration = async (week, isChefMode = false) => {
+    setShowValidationModal(false);
     setCurrentWeek(week);
     setLoading(true);
     setError(null);
     setRecipe(null);
-    setShoppingList(null);
 
     try {
-      const ingredientsString = ingredientList.join(", ");
+      const ingredientsString = isChefMode ? "" : ingredientList.join(", ");
       const result = await generateRecipeAPI(week, ingredientsString);
       setRecipe(Array.isArray(result) ? result[0] : result);
     } catch (err) {
@@ -109,18 +135,6 @@ function App() {
     }
   };
 
-  const handleGetShoppingList = async () => {
-    if (!recipe) return;
-    setShoppingListLoading(true);
-    try {
-      const result = await getShoppingListAPI(recipe.ingredients);
-      setShoppingList(result);
-    } catch (err) {
-      console.error("Failed to fetch shopping list:", err);
-    } finally {
-      setShoppingListLoading(false);
-    }
-  };
 
   // US-6: Favorite Handlers
   const handleSaveFavorite = async () => {
@@ -150,7 +164,6 @@ function App() {
   const handleSelectFavorite = (fav) => {
     setRecipe(fav.recipe_content);
     setCurrentWeek(fav.week || 1);
-    setShoppingList(null); // Clear shopping list when loading a favorite
     // Scroll to recipe
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -162,7 +175,7 @@ function App() {
     const newList = [...ingredientList, newIngredient];
     setIngredientList(newList);
     try {
-      await saveUserIngredients(newList);
+      if (user) await saveUserIngredients(user.uid, newList);
     } catch (err) {
       console.error("Failed to save ingredients:", err);
     }
@@ -172,7 +185,7 @@ function App() {
     const newList = ingredientList.filter((item) => item !== ingredientToRemove);
     setIngredientList(newList);
     try {
-      await saveUserIngredients(newList);
+      if (user) await saveUserIngredients(user.uid, newList);
     } catch (err) {
       console.error("Failed to remove ingredient:", err);
     }
@@ -181,7 +194,7 @@ function App() {
   const handleClearAll = async () => {
     setIngredientList([]);
     try {
-      await saveUserIngredients([]);
+      if (user) await saveUserIngredients(user.uid, []);
     } catch (err) {
       console.error("Failed to clear ingredients:", err);
     }
@@ -198,67 +211,78 @@ function App() {
     }
   };
 
-  const toggleLanguage = () => {
-    const nextLang = i18n.language === 'en' ? 'ko' : 'en';
-    i18n.changeLanguage(nextLang);
-  };
-
   const isFavorited = recipe && favorites.some(f => f.recipe_title === recipe.title);
 
   return (
-    <div className="container" style={{ padding: '2rem' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid #e7e5e4', paddingBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', margin: 0 }}>{t('app_title')}</h1>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={toggleLanguage}>{i18n.language === 'en' ? 'KO' : 'EN'}</button>
-          <AuthButton user={user} />
+    <>
+      <AppHeader user={user} />
+      <div className="container" style={{ padding: '0 2rem 2rem 2rem' }}>
+        <main>
+          {user && (
+            <IngredientSearch
+              ingredients={ingredientList}
+              onAdd={handleAddIngredient}
+              onRemove={handleRemoveFromList}
+              onClear={handleClearAll}
+              onOpenInspiration={() => setShowInspirationModal(true)}
+            />
+          )}
+          <DietForm
+            week={currentWeek}
+            onWeekChange={setCurrentWeek}
+            onSubmit={handleGenerate}
+            isLoading={loading}
+            hasIngredients={ingredientList.length > 0}
+          />
+
+          {error && <p style={{ color: 'red', textAlign: 'center', marginTop: '1rem' }}>{error}</p>}
+          {recipe && (
+            <RecipeDisplay
+              recipe={recipe}
+              onDownloadPdf={handleDownloadPdf}
+              onSaveFavorite={handleSaveFavorite}
+              isFavorited={isFavorited}
+              isSaving={isSavingFavorite}
+            />
+          )}
+
+          {user && (
+            <FavoritesList
+              favorites={favorites}
+              onSelect={handleSelectFavorite}
+              onDelete={handleDeleteFavorite}
+              isLoading={favoritesLoading}
+            />
+          )}
+
+          {showValidationModal && (
+            <ValidationModal
+              results={validationResults}
+              onProceed={() => proceedWithGeneration(pendingWeek, false)}
+              onCancel={() => setShowValidationModal(false)}
+            />
+          )}
+
+          {showInspirationModal && (
+            <InspirationModal
+              week={currentWeek}
+              onAdd={handleAddIngredient}
+              onClose={() => setShowInspirationModal(false)}
+              currentIngredients={ingredientList}
+            />
+          )}
+        </main>
+
+        {/* Hidden Print View for PDF Generation */}
+        <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+          <PrintView ref={printRef} recipe={recipe} activeLanguage={i18n.language} />
         </div>
-      </header>
 
-      <main>
-        {user && (
-          <IngredientSearch
-            ingredients={ingredientList}
-            onAdd={handleAddIngredient}
-            onRemove={handleRemoveFromList}
-            onClear={handleClearAll}
-          />
-        )}
-        <DietForm onSubmit={handleGenerate} isLoading={loading} />
-
-        {error && <p style={{ color: 'red', textAlign: 'center', marginTop: '1rem' }}>{error}</p>}
-        {recipe && (
-          <RecipeDisplay
-            recipe={recipe}
-            onDownloadPdf={handleDownloadPdf}
-            onGetShoppingList={handleGetShoppingList}
-            shoppingList={shoppingList}
-            isShoppingListLoading={shoppingListLoading}
-            onSaveFavorite={handleSaveFavorite}
-            isFavorited={isFavorited}
-            isSaving={isSavingFavorite}
-          />
-        )}
-
-        {user && (
-          <FavoritesList
-            favorites={favorites}
-            onSelect={handleSelectFavorite}
-            onDelete={handleDeleteFavorite}
-            isLoading={favoritesLoading}
-          />
-        )}
-      </main>
-
-      {/* Hidden Print View for PDF Generation */}
-      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
-        <PrintView ref={printRef} recipe={recipe} activeLanguage={i18n.language} />
+        <footer>
+          Made with 💚 for your well-being
+        </footer>
       </div>
-
-      <footer>
-        Made with 💚 for your well-being
-      </footer>
-    </div>
+    </>
   );
 }
 
