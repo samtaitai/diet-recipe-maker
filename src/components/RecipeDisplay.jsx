@@ -1,10 +1,18 @@
 import React from 'react';
 import { useTranslation } from "react-i18next";
 
-const RecipeDisplay = ({ recipe, onDownloadPdf, onSaveFavorite, isFavorited, isSaving }) => {
+const RecipeDisplay = ({ recipe, onDownloadPdf, onSaveFavorite, isFavorited, isSaving, isLoggedIn }) => {
   const { t } = useTranslation();
 
   if (!recipe) return null;
+
+  const handleSaveClick = () => {
+    if (!isLoggedIn) {
+      alert(t('signin_to_save') || "Sign in to save this recipe");
+      return;
+    }
+    onSaveFavorite();
+  };
 
   const shareText = encodeURIComponent(`Check out this recipe: ${recipe.title} #SwitchOnDiet`);
   const shareUrl = "https://twitter.com/intent/tweet?text=" + shareText;
@@ -13,17 +21,17 @@ const RecipeDisplay = ({ recipe, onDownloadPdf, onSaveFavorite, isFavorited, isS
     <div className="recipe-display" style={{ marginTop: '2rem', padding: '2rem', maxWidth: '800px', margin: '2rem auto', position: 'relative' }}>
       {/* US-6: Floating Favourite Button */}
       <button
-        className={`favorite-float-btn ${isFavorited ? 'favorited' : ''}`}
-        onClick={onSaveFavorite}
+        className={`favorite-float-btn ${isFavorited ? 'favorited' : ''} ${!isLoggedIn ? 'logged-out' : ''}`}
+        onClick={handleSaveClick}
         disabled={isSaving || isFavorited}
-        title={isFavorited ? t('favorites_saved') : t('favorites_save')}
+        title={!isLoggedIn ? t('signin_to_save') : (isFavorited ? t('favorites_saved') : t('favorites_save'))}
         aria-label={isFavorited ? t('favorites_saved') : t('favorites_save')}
       >
         <span className="favorite-float-icon">{isFavorited ? '♥' : '♡'}</span>
         <span className="favorite-float-label">{isFavorited ? t('favorites_saved') : t('favorites_save')}</span>
       </button>
 
-      <header style={{ textAlign: 'center', marginBottom: '2rem' }}>
+      <header style={{ textAlign: 'center', marginBottom: '2rem', paddingTop: '2.5rem' }}>
         <h2 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#1c1917' }}>{recipe.title}</h2>
         {recipe.health_benefit && (
           <p style={{ fontSize: '1.2rem', color: '#10b981', fontStyle: 'italic', margin: 0 }}>
@@ -43,7 +51,11 @@ const RecipeDisplay = ({ recipe, onDownloadPdf, onSaveFavorite, isFavorited, isS
           {Object.entries(recipe.macros).map(([key, val]) => (
             <div key={key} className="macro-card" style={{ background: '#fafaf9', padding: '1rem', borderRadius: '16px', textAlign: 'center', border: '1px solid #e7e5e4' }}>
               <span style={{ display: 'block', fontSize: '0.8rem', color: '#78716c', textTransform: 'uppercase' }}>{key}</span>
-              <strong style={{ display: 'block', fontSize: '1.2rem', color: '#10b981' }}>{val}</strong>
+              <strong style={{ display: 'block', fontSize: '1.2rem', color: '#10b981' }}>
+                {typeof val === 'string'
+                  ? val.split(' ').map(word => (word.length > 5 && !/\d/.test(word)) ? 'About' : word).join(' ')
+                  : val}
+              </strong>
             </div>
           ))}
         </div>

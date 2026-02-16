@@ -71,5 +71,7 @@
     "category_vegetables": "채소류",
     "category_grains": "곡류",
     "category_fats": "건강한 지방",
-    "category_boosters": "풍미 더하기"
+    "category_boosters": "풍미 더하기",
+    "copyright": "© {{year}} 이소연. 모든 권리 보유.",
+    "signin_to_save": "레시피를 저장하려면 로그인하세요"
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from "react-i18next";
 
-const DietForm = ({ week, onWeekChange, onSubmit, isLoading, hasIngredients }) => {
+const DietForm = ({ week, onWeekChange, onSubmit, isLoading, hasIngredients, isLoggedIn }) => {
     const { t } = useTranslation();
 
     const handleSubmit = (e) => {
@@ -26,15 +26,17 @@ const DietForm = ({ week, onWeekChange, onSubmit, isLoading, hasIngredients }) =
             </label>
 
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                <button
-                    type="button"
-                    onClick={() => onSubmit(week, false)}
-                    disabled={isLoading}
-                    className="btn-generate"
-                    style={{ flex: 1, marginTop: 0 }}
-                >
-                    {isLoading ? (t('generating') || "Generating...") : (`✨ ${t('generate_button') || "Generate Recipe"}`)}
-                </button>
+                {isLoggedIn && (
+                    <button
+                        type="button"
+                        onClick={() => onSubmit(week, false)}
+                        disabled={isLoading}
+                        className="btn-generate"
+                        style={{ flex: 1, marginTop: 0 }}
+                    >
+                        {isLoading ? (t('generating') || "Generating...") : (`✨ ${t('generate_button') || "Generate Recipe"}`)}
+                    </button>
+                )}
 
                 <button
                     type="button"

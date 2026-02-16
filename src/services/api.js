@@ -1,21 +1,28 @@
 import { auth, db } from "./firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
-const getAuthToken = async () => {
+const getAuthToken = async (optional = false) => {
   const user = auth.currentUser;
-  if (!user) throw new Error("User not authenticated");
+  if (!user) {
+    if (optional) return null;
+    throw new Error("User not authenticated");
+  }
   return user.getIdToken();
 };
 
 export const generateRecipeAPI = async (week, ingredients) => {
-  const token = await getAuthToken();
+  const token = await getAuthToken(true);
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
 
   const response = await fetch("/api/generateRecipe", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
+    headers,
     body: JSON.stringify({ week, ingredients })
   });
 

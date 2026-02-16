@@ -32,14 +32,16 @@ if GOOGLE_API_KEY:
 
 # --- Shared Auth Helper ---
 
-def verify_auth(req):
+def verify_auth(req, optional=False):
     """Verify Firebase ID token from the Authorization header.
 
-    Returns (uid, decoded_token) on success.
+    Returns (uid, decoded_token) on success, or (None, None) if optional.
     Raises ValueError with an error message on failure.
     """
     auth_header = req.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
+        if optional:
+            return None, None
         raise ValueError("Unauthorized: Missing or invalid token")
 
     parts = auth_header.split(" ")
@@ -71,35 +73,34 @@ def generate_recipe(req: https_fn.Request) -> https_fn.Response:
     if req.method != "POST":
         return https_fn.Response("Method not allowed", status=405)
 
-    # 2. Authentication
+    # 2. Authentication (Optional for recipe generation)
     try:
-        uid, decoded_token = verify_auth(req)
-    except ValueError as e:
-        return https_fn.Response(str(e), status=401)
+        uid, decoded_token = verify_auth(req, optional=True)
     except Exception as e:
         return https_fn.Response(f"Unauthorized: Invalid token. {str(e)}", status=401)
 
-    # 3. Rate Limiting Check
-    user_ref = get_db().collection("users").document(uid)
-    user_doc = user_ref.get()
+    # 3. Rate Limiting Check (Only for authenticated users)
+    if uid:
+        user_ref = get_db().collection("users").document(uid)
+        user_doc = user_ref.get()
 
-    now = datetime.datetime.now(datetime.timezone.utc)
+        now = datetime.datetime.now(datetime.timezone.utc)
 
-    if user_doc.exists:
-        user_data = user_doc.to_dict()
-        last_request = user_data.get("last_request_timestamp")
+        if user_doc.exists:
+            user_data = user_doc.to_dict()
+            last_request = user_data.get("last_request_timestamp")
 
-        if last_request:
-            if isinstance(last_request, datetime.datetime):
-                time_diff = (now - last_request).total_seconds()
-                if time_diff < 10:
-                    return https_fn.Response("Too Many Requests: Please wait 10 seconds.", status=429)
+            if last_request:
+                if isinstance(last_request, datetime.datetime):
+                    time_diff = (now - last_request).total_seconds()
+                    if time_diff < 10:
+                        return https_fn.Response("Too Many Requests: Please wait 10 seconds.", status=429)
 
-    # Set timestamp immediately to prevent race conditions during generation
-    user_ref.set({
-        "email": decoded_token.get("email"),
-        "last_request_timestamp": now
-    }, merge=True)
+        # Set timestamp immediately to prevent race conditions during generation
+        user_ref.set({
+            "email": decoded_token.get("email") if decoded_token else None,
+            "last_request_timestamp": now
+        }, merge=True)
 
     # 4. Parse Request Body
     data = req.get_json() or {}

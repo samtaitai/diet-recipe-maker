@@ -37,6 +37,9 @@ As a user, I want the system to create a recipe entirely based on the pre-define
 ### US-10: Recommended Ingredients Inspiration
 As a user, I want a "Need inspiration?" button below the ingredient input that opens a modal with categorized recommended ingredients (Proteins, Vegetables, Grains, Healthy Fats, Flavour Boosters). Clicking any ingredient adds it directly to my list, making it easier to build a diet-compliant recipe.
 
+### US-11: Refined Sticky Header & User Profile
+As a user, I want a sticky header that remains at the top of the page. Before signing in, it should show a bordered "Sign in" button. After signing in, it should show a circular avatar with initials. Clicking this avatar should open a menu with "Sign out" and "Favourite" options. "Favourite" should navigate to the favourites section on the page. The application name should have proper spacing.
+
 ---
 
 ## 3. Tech Stack
@@ -109,7 +112,7 @@ As a user, I want a "Need inspiration?" button below the ingredient input that o
 * **Helpful Guidance:** A rotating "Wellness Hint" bubble appearing above the input to guide ingredient pairings.
 * **Persistence:** If logged in, the system automatically saves and loads the tag list.
 
-### Recipe Generation (US-1, US-4)
+* **Visibility:** The "Generate Recipe" button is only visible when authenticated (as it requires a saved ingredient list). The "Chef, up to you" button is available to all users.
 * **UX Flow:** Minimalist full-screen loading overlay with smooth animations.
 * **Presentation (Wellness Journal Style):** 
     *   Use a sophisticated mix of **Serif typography** for titles and clean Sans-serif for data/instructions.

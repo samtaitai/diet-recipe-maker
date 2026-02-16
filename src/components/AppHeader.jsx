@@ -1,10 +1,13 @@
-import { Globe, LogIn } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Globe, LogIn, Heart, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { signInWithPopup, signOut } from "firebase/auth";
 import { auth, googleProvider } from "../services/firebase";
 
 const AppHeader = ({ user }) => {
     const { t, i18n } = useTranslation();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef(null);
 
     const handleLogin = async () => {
         try {
@@ -17,6 +20,7 @@ const AppHeader = ({ user }) => {
     const handleLogout = async () => {
         try {
             await signOut(auth);
+            setIsMenuOpen(false);
         } catch (error) {
             console.error("Logout failed", error);
         }
@@ -27,7 +31,31 @@ const AppHeader = ({ user }) => {
         i18n.changeLanguage(nextLang);
     };
 
+    const scrollToFavorites = () => {
+        const element = document.querySelector(".favorites-panel");
+        if (element) {
+            element.scrollIntoView({ behavior: "smooth" });
+        }
+        setIsMenuOpen(false);
+    };
+
     const currentLang = i18n.language.toUpperCase();
+
+    const getInitials = (email) => {
+        if (!email) return "?";
+        return email[0].toUpperCase();
+    };
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     return (
         <header className="app-header">
@@ -49,14 +77,32 @@ const AppHeader = ({ user }) => {
                     </button>
 
                     {user ? (
-                        <>
-                            <span className="user-email">
-                                {user.email}
-                            </span>
-                            <button className="btn-signout" onClick={handleLogout}>
-                                {t('logout') || "Sign out"}
+                        <div className="user-profile-container" ref={menuRef}>
+                            <button
+                                className="user-avatar"
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                title={user.email}
+                            >
+                                {getInitials(user.email)}
                             </button>
-                        </>
+
+                            {isMenuOpen && (
+                                <div className="user-dropdown-menu animate-fade-up">
+                                    <div className="dropdown-header">
+                                        <span className="dropdown-email">{user.email}</span>
+                                    </div>
+                                    <button className="dropdown-item" onClick={scrollToFavorites}>
+                                        <Heart size={16} />
+                                        {t('favorites_title') || "Favourites"}
+                                    </button>
+                                    <div className="dropdown-divider"></div>
+                                    <button className="dropdown-item logout" onClick={handleLogout}>
+                                        <LogOut size={16} />
+                                        {t('logout') || "Sign out"}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     ) : (
                         <button className="btn-signin" onClick={handleLogin}>
                             <LogIn size={14} />
