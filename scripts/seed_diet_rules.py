@@ -1,40 +1,47 @@
+import json
+import os
 import firebase_admin
 from firebase_admin import credentials, firestore
 
 # Initialize with the service account
-cred = credentials.Certificate("switchon-recipe-maker-2aecb8837fec.json")
+# Ensure we're pointing to the correct file location relative to where the script is run
+# Assuming script is run from project root
+cred_path = "switchon-recipe-maker-2aecb8837fec.json"
+if not os.path.exists(cred_path):
+    # Try looking in parent directory if run from scripts/
+    if os.path.exists(f"../{cred_path}"):
+        cred_path = f"../{cred_path}"
+
+cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
-diet_rules = {
-    "week_1": {
-        "allowed_ingredients": ["chicken breast", "white fish", "tofu", "cucumber", "broccoli", "leafy greens", "protein powder"],
-        "forbidden_ingredients": ["rice", "bread", "pasta", "fruit", "beef", "pork", "dairy"],
-        "rules_text": "Week 1 is strict protein and fiber only. No carbs, no sugar, no fatty meats. 4 meals a day. Protein shake allowed."
-    },
-    "week_2": {
-        "allowed_ingredients": ["chicken breast", "lean beef", "salmon", "berries", "brown rice (lunch only)", "nuts"],
-        "forbidden_ingredients": ["white flour", "sugar", "fried food"],
-        "rules_text": "Week 2 introduces healthy fats and limited low-GI carbs at lunch. Intermittent fasting 14:10."
-    },
-    "week_3": {
-        "allowed_ingredients": ["all lean meats", "fruits (limited)", "sweed potato", "oats", "avocado"],
-        "forbidden_ingredients": ["sugar", "alcohol", "processed snacks"],
-        "rules_text": "Week 3 allows more carb variety. Focus on metabolic flexibility. 24h fast once a week."
-    },
-    "week_4": {
-        "allowed_ingredients": ["everything healthy"],
-        "forbidden_ingredients": ["junk food", "excessive sugar"],
-        "rules_text": "Maintenance phase. 3 meals a day, general healthy eating."
-    }
-}
-
 def seed_data():
+    file_path = 'diet-rules.json'
+    if not os.path.exists(file_path):
+        if os.path.exists(f"../{file_path}"):
+            file_path = f"../{file_path}"
+            
+    with open(file_path, 'r') as f:
+        diet_rules = json.load(f)
+
+    batch = db.batch()
     collection_ref = db.collection("diet_rules")
-    for doc_id, data in diet_rules.items():
-        print(f"Seeding {doc_id}...")
-        collection_ref.document(doc_id).set(data)
+
+    for rule in diet_rules:
+        doc_id = rule.get('id')
+        if not doc_id:
+            continue
+            
+        # exclude 'id' from the data stored in the document
+        doc_data = {k: v for k, v in rule.items() if k != 'id'}
+        
+        doc_ref = collection_ref.document(doc_id)
+        batch.set(doc_ref, doc_data)
+        print(f"Added {doc_id} to batch...")
+
+    batch.commit()
     print("Done!")
 
 if __name__ == "__main__":
