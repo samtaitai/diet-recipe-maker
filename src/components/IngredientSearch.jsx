@@ -59,7 +59,7 @@ function IngredientSearch({ ingredients = [], onAdd, onRemove, onClear, onOpenIn
 
       {/* Subheader */}
       <p style={{
-        fontSize: "1.125rem",
+        fontSize: "clamp(0.9rem, 3vw, 1.125rem)",
         color: "var(--muted-fg)",
         marginBottom: "1.5rem",
         marginTop: "0"
@@ -137,7 +137,7 @@ function IngredientSearch({ ingredients = [], onAdd, onRemove, onClear, onOpenIn
             autoFocus={ingredients.length === 0}
             style={{
               flex: "1",
-              minWidth: "120px",
+              minWidth: "80px",
               border: "none",
               outline: "none",
               fontSize: "1rem",
