@@ -142,7 +142,7 @@ h6 {
         margin-right: 0.5rem;
     }
     .app-header-logo-text {
-        font-size: 1rem;
+        display: none;
     }
 }
 
@@ -297,6 +297,15 @@ h6 {
     border-color: var(--primary-color) !important;
     color: white !important;
     box-shadow: 0 4px 12px hsl(152 28% 40% / 0.2) !important;
+}
+
+@media (max-width: 480px) {
+    .btn-signin-text {
+        display: none;
+    }
+    .btn-signin {
+        padding: 0.5rem !important;
+    }
 }
 
 /* ── Buttons (base) ── */

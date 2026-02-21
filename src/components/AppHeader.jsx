@@ -64,7 +64,7 @@ const AppHeader = ({ user }) => {
                 <div className="app-header-logo">
                     <span className="app-header-logo-icon">🥗</span>
                     <span className="app-header-logo-text">
-                        {t('app_title') || "NourishAI"}
+                        {t('app_title') || "Switch-On Diet"}
                     </span>
                 </div>
 
@@ -106,7 +106,7 @@ const AppHeader = ({ user }) => {
                     ) : (
                         <button className="btn-signin" onClick={handleLogin}>
                             <LogIn size={14} />
-                            {t('login_google') || "Sign in"}
+                            <span className="btn-signin-text">{t('login_google') || "Sign in"}</span>
                         </button>
                     )}
                 </div>
