@@ -222,7 +222,7 @@ function App() {
   return (
     <>
       <AppHeader user={user} />
-      <div className="container" style={{ padding: '0 2rem 2rem 2rem' }}>
+      <div className="container">
         <main>
           {user && (
             <IngredientSearch

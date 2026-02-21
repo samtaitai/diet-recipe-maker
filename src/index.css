@@ -16,11 +16,11 @@
 
 body {
   margin: 0;
-  display: flex;
-  place-items: start;
-  justify-content: center;
+  display: block;
   min-width: 320px;
   min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 h1,
@@ -35,7 +35,7 @@ h6 {
 }
 
 h1 {
-  font-size: 3rem;
+  font-size: clamp(1.75rem, 6vw, 3rem);
   line-height: 1.15;
 }
 

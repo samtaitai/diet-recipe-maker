@@ -10,7 +10,7 @@ const DietForm = ({ week, onWeekChange, onSubmit, isLoading, hasIngredients, isL
     };
 
     return (
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '500px', margin: '2rem auto 0' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', margin: '2rem auto 0' }}>
             <label className="form-label-native">
                 {t('week_label') || "Select Diet Week"}
                 <select

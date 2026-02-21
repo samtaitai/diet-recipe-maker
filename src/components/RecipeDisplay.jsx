@@ -25,7 +25,7 @@ const RecipeDisplay = ({ recipe, onDownloadPdf, onSaveFavorite, isFavorited, isS
   const shareUrl = "https://twitter.com/intent/tweet?text=" + shareText;
 
   return (
-    <div className="recipe-display" style={{ marginTop: '2rem', padding: '2rem', maxWidth: '800px', margin: '2rem auto', position: 'relative' }}>
+    <div className="recipe-display" style={{ position: 'relative' }}>
       {/* US-6: Floating Favourite Button */}
       <button
         className={`favorite-float-btn ${isFavorited ? 'favorited' : ''} ${!isLoggedIn ? 'logged-out' : ''}`}
@@ -39,14 +39,14 @@ const RecipeDisplay = ({ recipe, onDownloadPdf, onSaveFavorite, isFavorited, isS
       </button>
 
       <header style={{ textAlign: 'center', marginBottom: '2rem', paddingTop: '2.5rem' }}>
-        <h2 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#1c1917' }}>{recipe.title}</h2>
+        <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', marginBottom: '0.5rem', color: '#1c1917' }}>{recipe.title}</h2>
         {recipe.health_benefit && (
           <p style={{ fontSize: '1.2rem', color: '#10b981', fontStyle: 'italic', margin: 0 }}>
             {recipe.health_benefit}
           </p>
         )}
 
-        <div className="meta-row" style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '1.5rem', color: '#78716c', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div className="meta-row" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem 1.5rem', marginTop: '1.5rem', color: '#78716c', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {recipe.prep_time && <span>🕒 Prep: {recipe.prep_time}</span>}
           {recipe.cook_time && <span>🍳 Cook: {recipe.cook_time}</span>}
           {recipe.servings && <span>👥 Serves: {recipe.servings}</span>}
@@ -68,7 +68,7 @@ const RecipeDisplay = ({ recipe, onDownloadPdf, onSaveFavorite, isFavorited, isS
         </div>
       )}
 
-      <div style={{ display: 'grid', md: { gridTemplateColumns: '1fr 2fr' }, gap: '2rem' }}>
+      <div className="recipe-body-grid">
         <div>
           <h3>Ingredients</h3>
           <ul style={{ listStyle: 'none', padding: 0 }}>
@@ -105,7 +105,7 @@ const RecipeDisplay = ({ recipe, onDownloadPdf, onSaveFavorite, isFavorited, isS
         </div>
       )}
 
-      <div className="actions" style={{ display: 'flex', gap: '10px', marginTop: '2rem', justifyContent: 'center' }}>
+      <div className="actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '2rem', justifyContent: 'center' }}>
         <button onClick={onDownloadPdf}>{t('print_pdf')}</button>
         <a
           href={shareUrl}
