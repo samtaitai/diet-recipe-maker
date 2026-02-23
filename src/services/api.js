@@ -132,3 +132,26 @@ export const deleteFavoriteAPI = async (favoriteId) => {
 
   return response.json();
 };
+
+
+// --- Account Deactivation ---
+
+export const deactivateAccountAPI = async (googleAccessToken) => {
+  const token = await getAuthToken();
+
+  const response = await fetch("/api/deactivate_account", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ google_access_token: googleAccessToken })
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to deactivate account");
+  }
+
+  return response.json();
+};

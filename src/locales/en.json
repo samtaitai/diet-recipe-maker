@@ -74,5 +74,12 @@
     "category_boosters": "Flavour Boosters",
     "copyright": "© {{year}} SoyonLee. All rights reserved.",
     "signin_to_save": "Sign in to save this recipe",
-    "signin_to_share_x": "Sign in to share it on X"
+    "signin_to_share_x": "Sign in to share it on X",
+    "deactivate_account": "Deactivate Account",
+    "deactivate_title": "Deactivate Your Account",
+    "deactivate_warning": "This will permanently delete your account, including all your saved favourite recipes and ingredients. Your Google authorization for this app will also be revoked. This action cannot be undone.",
+    "deactivate_confirm": "Yes, Deactivate My Account",
+    "deactivate_cancel": "Cancel",
+    "deactivate_error": "Failed to deactivate account. Please try again.",
+    "deactivating": "Deactivating..."
 }
