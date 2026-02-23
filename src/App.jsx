@@ -217,11 +217,19 @@ function App() {
     }
   };
 
+  const handleAccountDeactivated = () => {
+    setUser(null);
+    setRecipe(null);
+    setFavorites([]);
+    setIngredientList([]);
+    setError(null);
+  };
+
   const isFavorited = recipe && favorites.some(f => f.recipe_title === recipe.title);
 
   return (
     <>
-      <AppHeader user={user} />
+      <AppHeader user={user} onAccountDeactivated={handleAccountDeactivated} />
       <div className="container">
         <main>
           {user && (

@@ -1,12 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { Globe, LogIn, Heart, LogOut } from "lucide-react";
+import { Globe, LogIn, Heart, LogOut, UserX } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { signInWithPopup, signOut } from "firebase/auth";
+import { signInWithPopup, signOut, reauthenticateWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../services/firebase";
+import { deactivateAccountAPI } from "../services/api";
+import DeactivateModal from "./DeactivateModal";
 
-const AppHeader = ({ user }) => {
+const AppHeader = ({ user, onAccountDeactivated }) => {
     const { t, i18n } = useTranslation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+    const [isDeactivating, setIsDeactivating] = useState(false);
     const menuRef = useRef(null);
 
     const handleLogin = async () => {
@@ -23,6 +27,39 @@ const AppHeader = ({ user }) => {
             setIsMenuOpen(false);
         } catch (error) {
             console.error("Logout failed", error);
+        }
+    };
+
+    const handleDeactivateClick = () => {
+        setIsMenuOpen(false);
+        setShowDeactivateModal(true);
+    };
+
+    const handleDeactivateConfirm = async () => {
+        setIsDeactivating(true);
+        try {
+            const result = await reauthenticateWithPopup(auth.currentUser, googleProvider);
+            const googleAccessToken = result.credential?.accessToken;
+
+            if (!googleAccessToken) {
+                throw new Error("Failed to obtain Google access token");
+            }
+
+            await deactivateAccountAPI(googleAccessToken);
+
+            setShowDeactivateModal(false);
+            await signOut(auth);
+
+            if (onAccountDeactivated) {
+                onAccountDeactivated();
+            }
+        } catch (error) {
+            console.error("Deactivation failed:", error);
+            if (error.code !== "auth/popup-closed-by-user") {
+                alert(t('deactivate_error'));
+            }
+        } finally {
+            setIsDeactivating(false);
         }
     };
 
@@ -58,6 +95,7 @@ const AppHeader = ({ user }) => {
     }, []);
 
     return (
+        <>
         <header className="app-header">
             <div className="app-header-container">
                 {/* App name */}
@@ -100,6 +138,11 @@ const AppHeader = ({ user }) => {
                                         <LogOut size={16} />
                                         {t('logout') || "Sign out"}
                                     </button>
+                                    <div className="dropdown-divider"></div>
+                                    <button className="dropdown-item deactivate" onClick={handleDeactivateClick}>
+                                        <UserX size={16} />
+                                        {t('deactivate_account') || "Deactivate Account"}
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -112,6 +155,15 @@ const AppHeader = ({ user }) => {
                 </div>
             </div>
         </header>
+
+        {showDeactivateModal && (
+            <DeactivateModal
+                onConfirm={handleDeactivateConfirm}
+                onCancel={() => setShowDeactivateModal(false)}
+                isLoading={isDeactivating}
+            />
+        )}
+        </>
     );
 };
 

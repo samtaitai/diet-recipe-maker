@@ -40,6 +40,10 @@
         "function": "delete_favorite"
       },
       {
+        "source": "/api/deactivate_account",
+        "function": "deactivate_account"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

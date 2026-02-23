@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import requests
 import google.generativeai as genai
 from firebase_admin import initialize_app, firestore, auth, app_check
 from firebase_functions import https_fn, options
@@ -359,3 +360,93 @@ def delete_favorite(req: https_fn.Request) -> https_fn.Response:
         status=200,
         headers={"Content-Type": "application/json"},
     )
+
+
+# --- Account Deactivation ---
+
+@https_fn.on_request(
+    cors=options.CorsOptions(
+        cors_origins=["*"],
+        cors_methods=["POST", "OPTIONS"],
+    )
+)
+def deactivate_account(req: https_fn.Request) -> https_fn.Response:
+    """
+    Deactivates a user account:
+    1. Revokes Google OAuth token (best-effort)
+    2. Revokes Firebase refresh tokens
+    3. Deletes all Firestore data (favorites subcollection + user doc)
+    4. Deletes the Firebase Auth user record
+    """
+    if req.method == "OPTIONS":
+        return https_fn.Response(status=204)
+
+    if req.method != "POST":
+        return https_fn.Response("Method not allowed", status=405)
+
+    # Auth
+    try:
+        uid, _ = verify_auth(req)
+    except ValueError as e:
+        return https_fn.Response(str(e), status=401)
+    except Exception as e:
+        return https_fn.Response(f"Unauthorized: Invalid token. {str(e)}", status=401)
+
+    # Parse body
+    data = req.get_json() or {}
+    google_access_token = data.get("google_access_token")
+
+    if not google_access_token:
+        return https_fn.Response(
+            json.dumps({"error": "Missing 'google_access_token'"}),
+            status=400,
+            headers={"Content-Type": "application/json"},
+        )
+
+    try:
+        # Step 1: Revoke Google OAuth token (best-effort)
+        try:
+            revoke_resp = requests.post(
+                "https://oauth2.googleapis.com/revoke",
+                params={"token": google_access_token},
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                timeout=10,
+            )
+            if revoke_resp.status_code == 200:
+                print(f"Google OAuth token revoked for user {uid}")
+            else:
+                print(f"Google OAuth revocation returned {revoke_resp.status_code} for user {uid}")
+        except Exception as revoke_err:
+            print(f"Google OAuth revocation failed for user {uid}: {revoke_err}")
+
+        # Step 2: Revoke Firebase refresh tokens
+        auth.revoke_refresh_tokens(uid)
+
+        # Step 3: Delete all favorites subcollection documents
+        db = get_db()
+        favorites_ref = db.collection("users").document(uid).collection("favorites")
+        docs = favorites_ref.get()
+        batch = db.batch()
+        for doc in docs:
+            batch.delete(doc.reference)
+        batch.commit()
+
+        # Step 4: Delete user document
+        db.collection("users").document(uid).delete()
+
+        # Step 5: Delete Firebase Auth user record
+        auth.delete_user(uid)
+
+        return https_fn.Response(
+            json.dumps({"message": "Account deactivated successfully"}),
+            status=200,
+            headers={"Content-Type": "application/json"},
+        )
+
+    except Exception as e:
+        print(f"Account deactivation failed for user {uid}: {e}")
+        return https_fn.Response(
+            json.dumps({"error": f"Failed to deactivate account: {str(e)}"}),
+            status=500,
+            headers={"Content-Type": "application/json"},
+        )

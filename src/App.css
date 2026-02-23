@@ -270,6 +270,16 @@ h6 {
     color: #ef4444 !important;
 }
 
+.dropdown-item.deactivate {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.dropdown-item.deactivate:hover {
+    background: #fee2e2 !important;
+    color: #ef4444 !important;
+}
+
 .dropdown-divider {
     height: 1px;
     background: var(--border-color);
@@ -1233,6 +1243,22 @@ button.primary:hover {
 .btn-cancel:hover {
     background: var(--muted-bg) !important;
     color: var(--text-main) !important;
+}
+
+.btn-deactivate-confirm {
+    background: #ef4444 !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 600;
+}
+
+.btn-deactivate-confirm:hover {
+    background: #dc2626 !important;
+}
+
+.btn-deactivate-confirm:disabled {
+    background: #fca5a5 !important;
+    cursor: not-allowed;
 }
 
 /* ═══════════════════════════════════
